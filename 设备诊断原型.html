@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>设备诊断原型 · 智能诊断</title>
+  <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/element-plus/dist/index.full.min.js"></script>
+  <script src="https://unpkg.com/@element-plus/icons-vue/dist/index.iife.min.js"></script>
+  <script src="https://unpkg.com/echarts/dist/echarts.min.js"></script>
+  <style>
+    :root {
+      --defaultColor: #4A80F7;
+      --defaultColorLight: #ECF2FF;
+      --defaultColorLighter: #F0F5FF;
+      --successColor: #52C41A;
+      --warningColor: #FAAD14;
+      --dangerColor: #FF4D4F;
+      --fontTitle: #1A2035;
+      --fontDefault: #334060;
+      --fontNormal: #8A93A8;
+      --fontInfo: #B8C0CF;
+      --borderBase: #E4E9F2;
+      --borderHover: #C5CEDF;
+      --bgColor: #EFF2F8;
+      --bgCard: #FFFFFF;
+      --bgHover: #F6F8FC;
+      --shadowSm: 0 1px 4px rgba(26,32,64,0.06);
+      --shadowMd: 0 2px 10px rgba(26,32,64,0.08);
+      --radiusSm: 4px;
+      --radiusMd: 6px;
+      --radiusFull: 9999px;
+      --sidebarBg: #1C2438;
+      --sidebarText: #96A3BC;
+      --sidebarActiveText: #FFFFFF;
+      --sidebarActive: rgba(74,128,247,0.20);
+      --sidebarActiveBar: #4A80F7;
+      --sidebarHover: rgba(255,255,255,0.07);
+      --sidebarIconColor: #6A7A9A;
+      --el-color-primary: #4A80F7;
+      --el-color-primary-light-9: #ecf2ff;
+      --el-color-primary-dark-2: #3a6fe8;
+      --el-color-success: #52C41A;
+      --el-color-warning: #FAAD14;
+      --el-color-danger: #FF4D4F;
+      --el-border-color: #E4E9F2;
+      --el-fill-color-light: #F6F8FC;
+      --el-text-color-primary: #334060;
+      --el-text-color-regular: #334060;
+      --el-text-color-secondary: #8A93A8;
+      --el-bg-color: #FFFFFF;
+      --el-border-radius-base: 4px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      font-size: 14px; background: var(--bgColor); color: var(--fontDefault); min-height: 100vh;
+    }
+    .proto-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      background: #1d3557; padding: 4px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 11px; color: rgba(255,255,255,0.6);
+    }
+    .proto-bar strong { color: #fff; margin-right: 6px; }
+    .proto-badge {
+      background: rgba(255,178,0,0.15); border: 1px solid rgba(255,178,0,0.4);
+      color: #ffc107; padding: 1px 9px; border-radius: 20px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.4px;
+    }
+    /* ===== 整体布局 ===== */
+    .portal-wrap { display: flex; flex-direction: column; height: 100vh; padding-top: 26px; }
+
+    /* ===== 顶部 Header — 蓝紫渐变（对齐图2真实项目）===== */
+    .p-header {
+      position: relative; width: 100%; height: 60px;
+      background: linear-gradient(90deg, #4158D0 0%, #5B6FE8 50%, #4A80F7 100%);
+      box-shadow: 0 2px 12px rgba(65,88,208,0.35);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0; z-index: 100;
+    }
+    .p-header::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%);
+      pointer-events: none;
+    }
+    .p-header-logo {
+      padding: 0 16px 0 20px; cursor: pointer; display: flex; align-items: center; opacity: 0.95;
+    }
+    .p-header-logo-inner { display: flex; align-items: center; gap: 10px; }
+    .p-header-logo-mark {
+      width: 32px; height: 32px; background: rgba(255,255,255,0.22); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .p-header-logo-text { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+    .p-header-right {
+      padding-right: 28px; display: flex; align-items: center; height: 60px; gap: 4px;
+    }
+    .p-header-hint { font-size: 11px; color: rgba(255,255,255,0.5); margin-right: 12px; font-style: italic; }
+    .p-header-icon-btn {
+      width: 32px; height: 32px; border-radius: var(--radiusFull);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.85); cursor: pointer; font-size: 16px;
+      transition: background-color 0.2s ease;
+    }
+    .p-header-icon-btn:hover { background-color: rgba(255,255,255,0.15); color: #fff; }
+    .p-header-avatar {
+      width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.22);
+      border: 2px solid rgba(255,255,255,0.5);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
+      margin: 0 6px 0 10px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .p-header-avatar:hover { border-color: rgba(255,255,255,0.9); box-shadow: 0 0 0 3px rgba(255,255,255,0.15); transform: scale(1.06); }
+    .p-header-username {
+      color: rgba(255,255,255,0.9); cursor: pointer; font-size: 14px; font-weight: 500;
+      display: flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 20px;
+      transition: background-color 0.2s ease;
+    }
+    .p-header-username:hover { background-color: rgba(255,255,255,0.15); color: #fff; }
+
+    /* ===== 主体区 aside + main ===== */
+    .p-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+
+    /* ===== 侧边栏 — 白色底（对齐图2真实项目）===== */
+    .p-aside {
+      width: 174px; flex-shrink: 0;
+      background-color: #fff;
+      border-right: 1px solid var(--borderBase);
+      box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+      height: 100%; overflow-y: auto; overflow-x: hidden;
+      display: flex; flex-direction: column;
+    }
+    /* 折叠/展开按钮 */
+    .p-collapse-btn {
+      display: flex; align-items: center; justify-content: flex-end;
+      padding: 8px 14px; cursor: pointer;
+      border-bottom: 1px solid var(--borderBase); flex-shrink: 0;
+      transition: background-color 0.2s ease; color: var(--fontNormal); font-size: 16px;
+    }
+    .p-collapse-btn:hover { background-color: var(--bgHover); color: var(--defaultColor); }
+    /* 菜单项（白色底风格）*/
+    .p-menu-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 14px; height: 46px;
+      font-size: 13px; cursor: pointer; color: var(--fontNormal);
+      border-left: 3px solid transparent;
+      transition: background-color 0.18s ease, color 0.18s ease;
+    }
+    .p-menu-item:hover { background-color: var(--defaultColorLighter); color: var(--defaultColor); }
+    .p-menu-item:hover .p-menu-icon { color: var(--defaultColor); }
+    .p-menu-item.active {
+      background-color: var(--defaultColorLighter); color: var(--defaultColor);
+      border-left-color: var(--defaultColor); font-weight: 600;
+    }
+    .p-menu-item.active .p-menu-icon { color: var(--defaultColor); }
+    .p-menu-icon { font-size: 15px; color: var(--fontNormal); flex-shrink: 0; }
+
+    /* ===== el-main ===== */
+    .p-main {
+      flex: 1; min-width: 0; overflow-y: auto;
+      padding: 10px 16px 0 16px;
+      background-color: var(--bgColor);
+    }
+    .main-container { padding: 4px 0 0 0; }
+    .content-container { margin-top: 12px; }
+    .msg_title {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 600; color: var(--fontTitle); margin: 0; padding: 0;
+    }
+    .msg_title i {
+      display: inline-block; width: 3px; height: 14px;
+      background: var(--defaultColor); border-radius: 2px; flex-shrink: 0;
+    }
+    .msg_title b { font-weight: 600; font-style: normal; }
+    .card-diagnose-box {
+      background: var(--bgCard); border: 1px solid var(--borderBase);
+      border-radius: var(--radiusMd); box-shadow: var(--shadowSm);
+      overflow: hidden; transition: box-shadow 0.2s ease; height: 100%;
+    }
+    .card-diagnose-box:hover { box-shadow: var(--shadowMd); }
+    .card-diagnose-box > div:first-child {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 16px; background: var(--bgHover); border-bottom: 1px solid var(--borderBase);
+    }
+    .card-diagnose-box > div:first-child .msg_title { flex: 1; }
+    .card-diagnose-box .box-border { padding: 14px 16px; }
+    .card-diagnose-box .content { display: inline-block; margin-right: 6px; font-size: 13px; }
+    .card-diagnose-box .green { font-weight: 600; color: var(--successColor); }
+    .card-diagnose-box .red   { font-weight: 600; color: var(--dangerColor); }
+    .card-diagnose-box .gray  { color: var(--fontNormal); }
+    .card-diagnose-box .desc-btn, .card-diagnose-box .desc-long-btn {
+      height: 22px; padding: 0 8px; font-size: 12px; border-radius: var(--radiusSm); vertical-align: middle;
+    }
+    .basic-info-container {
+      background: var(--bgCard); border: 1px solid var(--borderBase);
+      border-radius: var(--radiusMd); box-shadow: var(--shadowSm);
+      overflow: hidden; transition: box-shadow 0.2s ease;
+    }
+    .basic-info-container:hover { box-shadow: var(--shadowMd); }
+    .basic-info-container > .msg_title {
+      display: flex; align-items: center;
+      padding: 10px 16px; background: var(--bgHover); border-bottom: 1px solid var(--borderBase);
+      justify-content: space-between;
+    }
+    .basic-info-container .box-border { padding: 14px 16px; }
+    .basic-info-container .green { font-weight: 600; color: var(--successColor); }
+    .basic-info-container .red   { font-weight: 600; color: var(--dangerColor); }
+    .basic-info-container .gray  { color: var(--fontNormal); }
+    .flex-container { display: flex; width: 100%; gap: 16px; }
+    .flex-item { display: flex; flex-direction: column; gap: 16px; }
+    .flex-left { flex: 7 !important; min-width: 0; }
+    .flex-left-top {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 8px; padding: 10px 16px;
+      background: var(--bgCard); border: 1px solid var(--borderBase);
+      border-radius: var(--radiusMd); box-shadow: var(--shadowSm);
+    }
+    .flex-left-top__actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+    /* 搜索框（对齐 index.vue 入口页样式）*/
+    .diagnose-search-input {
+      width: 340px;
+    }
+    .diagnose-search-input .el-input__wrapper {
+      border-radius: 8px 0 0 8px !important;
+      box-shadow: none !important;
+      border: 1px solid var(--borderBase) !important;
+    }
+    .diagnose-search-input .el-input-group__append {
+      border-radius: 0 8px 8px 0 !important;
+      border: 1px solid var(--borderBase) !important;
+      border-left: none !important;
+      padding: 0 16px;
+    }
+    .diagnose-search-input .el-input-group__append .el-button {
+      padding: 0 16px;
+      border-radius: 0 8px 8px 0;
+    }
+    .flex-tabs-card {
+      background: var(--bgCard); border: 1px solid var(--borderBase);
+      border-radius: var(--radiusMd); box-shadow: var(--shadowSm); padding: 0 16px;
+    }
+    .flex-tabs-card .el-tabs__header { margin-bottom: 0; }
+    .flex-tabs-card .el-tabs__nav-wrap::after { height: 1px; background: var(--borderBase); }
+    .flex-row-item { display: flex; flex-wrap: wrap; gap: 16px; }
+    .flex-row-item .row-item { width: calc(50% - 8px); }
+    .flex-row-item .row-item--full { width: 100%; }
+    .flex-right { flex: 3 !important; min-width: 0; position: sticky; top: 0; align-self: flex-start; }
+    .diagnose-card-badge {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 12px 4px 10px;
+      background: var(--defaultColorLighter); border: 1px solid var(--defaultColorLight);
+      border-radius: var(--radiusFull); margin-right: 12px;
+    }
+    .diagnose-card-badge__icon { font-size: 14px; color: var(--defaultColor); }
+    .diagnose-card-badge__text {
+      font-size: 13px; font-weight: 600; color: var(--defaultColor);
+      letter-spacing: 0.3px; font-family: 'Courier New', monospace;
+    }
+    @keyframes fadeInUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .row-item--animated { animation: fadeInUp 0.32s ease both; animation-delay: var(--delay, 0s); }
+    .qr-preview-card {
+      background: var(--bgCard); border: 1px solid var(--borderBase);
+      border-radius: var(--radiusMd); box-shadow: var(--shadowSm); overflow: hidden;
+    }
+    .qr-preview-card__header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px; background: var(--bgHover); border-bottom: 1px solid var(--borderBase);
+    }
+    .qr-preview-card__actions { display: flex; gap: 8px; }
+    .qr-preview-card__body { padding: 20px 16px; min-height: 180px; display: flex; align-items: center; justify-content: center; }
+    .qr-code-container { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .qr-code-tip { font-size: 12px; color: var(--fontInfo); text-align: center; margin: 0; }
+    .qr-placeholder { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; }
+    .qr-placeholder__icon { font-size: 44px; color: var(--borderHover); }
+    .qr-placeholder__text { font-size: 13px; color: var(--fontInfo); margin: 0; }
+    .qr-scale-enter-active { transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.34,1.36,0.64,1); }
+    .qr-scale-leave-active { transition: opacity 0.15s ease; }
+    .qr-scale-enter-from { opacity:0; transform:scale(0.88); }
+    .qr-scale-leave-to { opacity:0; }
+    .section-title {
+      font-size: 13px; font-weight: 600; color: var(--fontTitle);
+      margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+    }
+    .section-title::before {
+      content: ''; display: inline-block; width: 3px; height: 13px;
+      background: var(--defaultColor); border-radius: 2px; flex-shrink: 0;
+    }
+    .dialog-section { margin-bottom: 20px; }
+    .dialog-section:last-child { margin-bottom: 0; }
+    .table-scroll { overflow-x: auto; }
+    .pager-row { margin-top: 10px; display: flex; justify-content: flex-end; }
+
+    /* ===== 客诉工单创建页（还原 CreateComplains/index.vue 结构）===== */
+    .create-complains-form {
+      width: 100%;
+    }
+    .create-complains-form .el-select,
+    .create-complains-form .el-input:not(.super-input):not(.small-size-input) {
+      width: 280px;
+    }
+    .has-action-container {
+      max-height: calc(100vh - 232px);
+      overflow-y: auto;
+      padding-bottom: 80px;
+    }
+    .form-section {
+      margin-bottom: 16px;
+      padding: 0 20px 20px;
+      background: var(--bgCard);
+      border: 1px solid var(--borderBase);
+      border-radius: var(--radiusMd);
+      box-shadow: var(--shadowSm);
+    }
+    .form-section__title {
+      font-size: 14px; font-weight: 600; color: var(--fontTitle);
+      padding: 12px 20px; margin: 0 -20px 16px;
+      background: linear-gradient(90deg, rgba(74,128,247,0.06) 0%, transparent 100%);
+      border-bottom: 1px solid var(--borderBase);
+      display: flex; align-items: center;
+    }
+    .form-section__title::before {
+      content: ''; display: inline-block; width: 3px; height: 14px;
+      background: var(--defaultColor); border-radius: 2px; margin-right: 8px; flex-shrink: 0;
+    }
+    .card-verify-result {
+      margin: 0 0 16px; padding: 12px 16px 6px;
+      border: 1px solid rgba(74,128,247,0.25);
+      border-left: 3px solid var(--defaultColor);
+      border-radius: 0 var(--radiusSm) var(--radiusSm) 0;
+      background: rgba(74,128,247,0.04);
+      margin-left: 140px;
+    }
+    .card-verify-result__header {
+      font-size: 13px; font-weight: 600; color: var(--fontTitle);
+      display: flex; align-items: center; gap: 8px;
+      padding-bottom: 8px; margin-bottom: 6px;
+      border-bottom: 1px dashed var(--borderBase);
+    }
+    .card-verify-result__grid {
+      display: grid; grid-template-columns: 1fr; gap: 0 4px; align-items: start;
+    }
+    @media (min-width: 720px) {
+      .card-verify-result__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (min-width: 1200px) {
+      .card-verify-result__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    .card-verify-result .el-form-item { margin-bottom: 8px; }
+    .inline-field { display: flex; align-items: center; gap: 8px; }
+    .super-input { width: 100%; }
+    .small-size-input { width: 120px; }
+    .continue-add-check { margin-left: 24px; }
+    .avatar-uploader-icon-btn {
+      width: 88px; height: 88px; border-radius: var(--radiusMd);
+      border: 1px dashed var(--borderHover); background: var(--bgHover);
+      font-size: 20px; color: var(--fontNormal);
+    }
+    .el-breadcrumb__item .el-breadcrumb__inner,
+    .el-breadcrumb__item .el-breadcrumb__inner a { color: var(--fontNormal) !important; font-size: 13px; }
+    .el-breadcrumb__item:last-child .el-breadcrumb__inner { color: var(--fontDefault) !important; }
+    .el-dialog__header { padding: 14px 18px 12px; border-bottom: 1px solid var(--borderBase); }
+    .el-dialog__title { font-size: 14px; font-weight: 600; color: var(--fontTitle); }
+    .el-dialog__body { padding: 16px 18px; }
+    .el-tabs__content { padding-top: 12px; }
+    .el-descriptions__label  { color: var(--fontNormal)  !important; font-size: 13px !important; }
+    .el-descriptions__content{ color: var(--fontDefault) !important; font-size: 13px !important; }
+    /* 表格样式统一 */
+    .el-table th.el-table__cell {
+      background-color: #f5f7fa !important;
+      color: var(--fontNormal) !important;
+      font-weight: normal !important;
+      font-size: 12px !important;
+    }
+    .el-table td.el-table__cell { font-size: 13px; color: var(--fontDefault); }
+    .el-table .cell { white-space: nowrap; }
+  </style>
+</head>
+<body>
+
+<div class="proto-bar">
+  <div><strong>客诉平台原型 v1.1</strong>仅用于产品评审与需求核对，不代表最终实现。左侧菜单可切换「智能诊断 / 客诉工单创建（开票） / 面包退款」三个模块。</div>
+  <span class="proto-badge">PROTOTYPE · v1.1</span>
+</div>
+
+<div id="app">
+  <div class="portal-wrap">
+
+    <!-- Header（还原 Header.vue 真实结构）-->
+    <header class="p-header">
+      <div class="p-header-logo">
+        <div class="p-header-logo-inner">
+          <div class="p-header-logo-mark">客</div>
+          <span class="p-header-logo-text">客诉系统</span>
+        </div>
+      </div>
+      <div class="p-header-right">
+        <span class="p-header-hint" v-if="currentPage === 'diagnose'">← 搜索框输入设备号 DV250703001 后跳转至此页（原型模拟）</span>
+        <!-- 主题切换 -->
+        <div class="p-header-icon-btn" title="切换主题">☀</div>
+        <!-- 全屏 -->
+        <div class="p-header-icon-btn" title="全屏">⛶</div>
+        <!-- 用户头像 -->
+        <div class="p-header-avatar">刘</div>
+        <!-- 用户名下拉 -->
+        <div class="p-header-username">刘强东 ▾</div>
+      </div>
+    </header>
+
+    <div class="p-body">
+
+      <!-- 侧边栏（还原 el-aside + Sidebar.vue）-->
+      <aside class="p-aside">
+        <!-- 折叠/展开按钮（collapse-btn-wrapper）-->
+        <div class="p-collapse-btn">☰</div>
+        <!-- 菜单 -->
+        <div class="p-menu-item" :class="{ active: currentPage === 'diagnose' }" @click="currentPage = 'diagnose'">
+          <span class="p-menu-icon">🔍</span>
+          智能诊断
+        </div>
+        <div class="p-menu-item" :class="{ active: currentPage === 'complain' }" @click="currentPage = 'complain'">
+          <span class="p-menu-icon">🧾</span>
+          客诉工单创建
+        </div>
+        <div class="p-menu-item" :class="{ active: currentPage === 'refund' }" @click="currentPage = 'refund'">
+          <span class="p-menu-icon">💰</span>
+          面包退款
+        </div>
+      </aside>
+
+      <!-- 主内容区（el-main）-->
+      <main class="p-main">
+        <div class="main-container">
+        <template v-if="currentPage === 'diagnose'">
+        <el-breadcrumb separator="/">
+          <el-breadcrumb-item><span style="cursor:pointer;">智能诊断</span></el-breadcrumb-item>
+          <el-breadcrumb-item>诊断详情</el-breadcrumb-item>
+        </el-breadcrumb>
+
+        <div class="content-container">
+          <div class="flex-container">
+
+            <!-- 左栏 -->
+            <div class="flex-item flex-left">
+
+              <!-- 操作栏 -->
+              <div class="flex-left-top">
+                <div class="diagnose-card-badge">
+                  <el-icon class="diagnose-card-badge__icon"><cpu></cpu></el-icon>
+                  <span class="diagnose-card-badge__text">{{ device.deviceNo }}</span>
+                </div>
+                <div class="flex-left-top__actions">
+                  <!-- 搜索框：靠右，查询工单前 -->
+                  <el-input
+                    v-model="searchCardNum"
+                    clearable
+                    placeholder="请输入 ICCID / 卡号 / 虚拟卡号 / 多网卡号"
+                    class="diagnose-search-input"
+                    @keyup.enter="onSearchConfirm"
+                  >
+                    <template #append>
+                      <el-button @click="onSearchConfirm">诊断</el-button>
+                    </template>
+                  </el-input>
+                  <el-button type="primary" @click="dialogs.channel = true">查询工单生成</el-button>
+                  <el-dropdown>
+                    <el-button>
+                      生成其他类型工单
+                      <el-icon class="el-icon--right"><arrow-down></arrow-down></el-icon>
+                    </el-button>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item v-for="o in orderTypes" :key="o.value">{{ o.label }}</el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
+                </div>
+              </div>
+
+              <!-- Tab -->
+              <div class="flex-left-center flex-tabs-card">
+                <el-tabs v-model="mainTab" @tab-change="onMainTabChange">
+                  <el-tab-pane label="设备" name="device"></el-tab-pane>
+                  <el-tab-pane v-for="c in subCards" :key="c.name"
+                    :label="c.operatorDesc + (c.isActive ? '（启用）' : '')"
+                    :name="c.name"></el-tab-pane>
+                </el-tabs>
+              </div>
+
+              <!-- 基本信息 -->
+              <div class="flex-left-center">
+                <div class="basic-info-container">
+                  <h3 class="msg_title">
+                    <i></i><b>基本信息</b>
+                    <el-button v-if="mainTab === 'device'" size="small" @click="dialogs.deviceDetail = true" style="margin-left:auto;">设备详情</el-button>
+                  </h3>
+                  <div class="box-border">
+                    <template v-if="mainTab === 'device'">
+                      <el-descriptions :column="3">
+                        <el-descriptions-item label="设备号">{{ device.deviceNo }}</el-descriptions-item>
+                        <el-descriptions-item label="多网卡卡号">{{ device.multiNetId }}</el-descriptions-item>
+                        <el-descriptions-item label="设备ID">{{ device.deviceId }}</el-descriptions-item>
+                        <el-descriptions-item label="设备SN">{{ device.deviceSn }}</el-descriptions-item>
+                        <el-descriptions-item label="设备IMEI">{{ device.imei }}</el-descriptions-item>
+                        <el-descriptions-item label="所属客户">{{ device.customer }}</el-descriptions-item>
+                        <el-descriptions-item label="设备品牌">{{ device.brand }}</el-descriptions-item>
+                        <el-descriptions-item label="卡槽顺序">{{ device.slotOrder }}</el-descriptions-item>
+                        <el-descriptions-item label="设备规格">{{ device.spec }}</el-descriptions-item>
+                        <el-descriptions-item label="卡槽类型">{{ device.slotType }}</el-descriptions-item>
+                        <el-descriptions-item label="设备在线状态">
+                          <span :class="device.onlineStatus === '在线' ? 'green' : 'red'">{{ device.onlineStatus }}</span>
+                        </el-descriptions-item>
+                        <el-descriptions-item label="设备限速值">{{ device.speedLimit }}</el-descriptions-item>
+                      </el-descriptions>
+                    </template>
+                    <template v-else>
+                      <el-descriptions :column="3">
+                        <el-descriptions-item label="ICCID" :span="2">{{ curSubCard.iccid }}</el-descriptions-item>
+                        <el-descriptions-item label="卡号">{{ curSubCard.msisdn }}</el-descriptions-item>
+                        <el-descriptions-item label="IMSI" :span="2">{{ curSubCard.imsi }}</el-descriptions-item>
+                        <el-descriptions-item label="是否正使用">
+                          <span :class="curSubCard.isUsing ? 'green' : 'gray'">{{ curSubCard.isUsing ? '是' : '否' }}</span>
+                        </el-descriptions-item>
+                        <el-descriptions-item label="网络类型">{{ curSubCard.networkType }}</el-descriptions-item>
+                        <el-descriptions-item label="供应商账号" :span="2">{{ curSubCard.providerAccount }}</el-descriptions-item>
+                      </el-descriptions>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2列网格 -->
+              <div class="flex-row-item flex-left-bottom">
+
+                <!-- 卡诊断 全宽 -->
+                <div class="row-item row-item--full row-item--animated" style="--delay:0s">
+                  <div class="card-diagnose-box">
+                    <div>
+                      <h3 class="msg_title"><i></i><b>卡诊断</b></h3>
+                      <el-radio-group v-model="cardTab" size="small">
+                        <el-radio-button v-for="c in subCards" :key="c.name" :value="c.name">
+                          {{ c.operatorDesc }}{{ c.isActive ? '（启用）' : '' }}
+                        </el-radio-button>
+                      </el-radio-group>
+                      <el-button size="small" type="primary">刷新</el-button>
+                      <el-button size="small" @click="dialogs.cardLog = true">日志</el-button>
+                    </div>
+                    <div class="box-border">
+                      <el-descriptions :column="3">
+                        <el-descriptions-item label="当月用量"><span class="content">{{ curDiag.flowUsed }}</span></el-descriptions-item>
+                        <el-descriptions-item label="实名认证"><span :class="['content', curDiag.isAuth ? 'green' : 'red']">{{ curDiag.realName }}</span></el-descriptions-item>
+                        <el-descriptions-item label="计费状态"><span :class="['content', curDiag.billingStatus === '正常计费' ? 'green' : 'gray']">{{ curDiag.billingStatus }}</span></el-descriptions-item>
+                        <el-descriptions-item label="计费状态变更时间" :span="3"><span class="content">{{ curDiag.billingChangeTime }}</span></el-descriptions-item>
+                        <el-descriptions-item label="通讯状态"><span :class="['content', curDiag.commStatus === '正常' ? 'green' : 'red']">{{ curDiag.commStatus }}</span></el-descriptions-item>
+                        <el-descriptions-item label="在线状态（SIM卡连接）" :span="2"><span :class="['content', curDiag.simOnline === '在线' ? 'green' : 'gray']">{{ curDiag.simOnline }}</span></el-descriptions-item>
+                        <el-descriptions-item label="卡状态" :span="2">
+                          <span class="content green">{{ curDiag.cardStatus }}</span>
+                          <el-button size="small" class="desc-long-btn" type="danger" plain>停机</el-button>
+                        </el-descriptions-item>
+                        <el-descriptions-item label="锁卡原因"><span class="content gray">{{ curDiag.lockReason }}</span></el-descriptions-item>
+                        <el-descriptions-item label="网络连接状态" :span="2">
+                          <span :class="['content', curDiag.netStatus === '已连接' ? 'green' : 'gray']">{{ curDiag.netStatus }}</span>
+                          <el-button size="small" class="desc-btn" plain>断网</el-button>
+                        </el-descriptions-item>
+                        <el-descriptions-item label="网络状态变更时间"><span class="content">{{ curDiag.netChangeTime }}</span></el-descriptions-item>
+                        <el-descriptions-item label="卡限速" :span="2">
+                          <span class="content">{{ curDiag.speedLimit }}</span>
+                          <el-button size="small" class="desc-btn" plain>限速</el-button>
+                        </el-descriptions-item>
+                        <el-descriptions-item v-if="cardTab === 'telecom'" label="达量断网阈值（仅电信）"><span class="content">{{ curDiag.flowCutThreshold }}</span></el-descriptions-item>
+                        <el-descriptions-item label="卡使用地区" :span="cardTab === 'telecom' ? 2 : 3"><span class="content gray">{{ curDiag.cardRegion }}</span></el-descriptions-item>
+                        <el-descriptions-item label="机卡绑定检测" :span="2">
+                          <span class="content">{{ curDiag.macBind }}</span>
+                          <el-button size="small" class="desc-btn" plain>机卡绑定</el-button>
+                        </el-descriptions-item>
+                        <el-descriptions-item label="CMP人联网"><span class="content">{{ curDiag.cmpIoH }}</span></el-descriptions-item>
+                        <el-descriptions-item label="人联网限制" :span="2"><span class="content">{{ curDiag.iohLimit }}</span></el-descriptions-item>
+                        <el-descriptions-item v-if="cardTab === 'mobile'" label="是否订购移动二次管控"><span class="content">{{ curDiag.mobileSecondCtrl }}</span></el-descriptions-item>
+                        <el-descriptions-item label="区域限制黑名单" :span="cardTab === 'mobile' ? 1 : 2"><span class="content">{{ curDiag.regionBlacklist }}</span></el-descriptions-item>
+                        <el-descriptions-item label="是否冻结"><span class="content">{{ curDiag.isFrozen }}</span></el-descriptions-item>
+                      </el-descriptions>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 套餐信息 -->
+                <div class="row-item row-item--animated" style="--delay:0.06s">
+                  <div class="card-diagnose-box">
+                    <div>
+                      <h3 class="msg_title"><i></i><b>套餐信息</b></h3>
+                      <el-button size="small" type="primary">刷新</el-button>
+                      <el-button size="small" @click="dialogs.mealMore = true">更多</el-button>
+                    </div>
+                    <div class="box-border">
+                      <el-descriptions :column="2">
+                        <el-descriptions-item label="套餐名称" :span="2"><span class="content">{{ meal.name }}</span></el-descriptions-item>
+                        <el-descriptions-item label="当前套餐已用量"><span class="content">{{ meal.used }}</span></el-descriptions-item>
+                        <el-descriptions-item label="当前套餐剩余量"><span class="content">{{ meal.remain }}</span></el-descriptions-item>
+                        <el-descriptions-item label="套餐到期时间" :span="2"><span class="content gray">{{ meal.expiry }}</span></el-descriptions-item>
+                      </el-descriptions>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 客诉记录 -->
+                <div class="row-item row-item--animated" style="--delay:0.12s">
+                  <div class="card-diagnose-box">
+                    <div>
+                      <h3 class="msg_title"><i></i><b>客诉记录</b></h3>
+                      <el-button size="small" type="primary">刷新</el-button>
+                      <el-button size="small" @click="dialogs.complainLog = true">日志</el-button>
+                    </div>
+                    <div class="box-border">
+                      <el-descriptions :column="2">
+                        <el-descriptions-item label="最近一次工单时间" :span="2"><span class="content gray">--</span></el-descriptions-item>
+                        <el-descriptions-item label="工单状态">
+                          <span class="content gray">--</span>
+                          <el-button link type="primary" size="small">生成评价外链</el-button>
+                        </el-descriptions-item>
+                        <el-descriptions-item label="尚未完成工单数"><span class="content red">0</span></el-descriptions-item>
+                        <el-descriptions-item label="当前满意度" :span="2"><span class="content gray">--%</span></el-descriptions-item>
+                      </el-descriptions>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div><!-- /flex-left -->
+
+            <!-- 右栏 -->
+            <div class="flex-item flex-right">
+              <div class="qr-preview-card">
+                <div class="qr-preview-card__header">
+                  <h3 class="msg_title"><i></i><b>C端页面预览</b></h3>
+                  <div class="qr-preview-card__actions">
+                    <el-button type="primary" size="small" @click="qrVisible = !qrVisible">{{ qrVisible ? '收起' : '预览' }}</el-button>
+                    <el-button size="small">复制充值链接</el-button>
+                  </div>
+                </div>
+                <div class="qr-preview-card__body">
+                  <transition name="qr-scale">
+                    <div v-if="qrVisible" class="qr-code-container">
+                      <svg width="180" height="180" viewBox="0 0 180 180" style="border:1px solid var(--borderBase);border-radius:4px;background:#fff;padding:6px;">
+                        <rect width="180" height="180" fill="#fff"/>
+                        <rect x="10" y="10" width="58" height="58" rx="3" fill="none" stroke="#334060" stroke-width="4"/>
+                        <rect x="22" y="22" width="34" height="34" fill="#334060" rx="2"/>
+                        <rect x="112" y="10" width="58" height="58" rx="3" fill="none" stroke="#334060" stroke-width="4"/>
+                        <rect x="124" y="22" width="34" height="34" fill="#334060" rx="2"/>
+                        <rect x="10" y="112" width="58" height="58" rx="3" fill="none" stroke="#334060" stroke-width="4"/>
+                        <rect x="22" y="124" width="34" height="34" fill="#334060" rx="2"/>
+                        <rect x="112" y="112" width="8" height="8" fill="#334060"/>
+                        <rect x="124" y="112" width="8" height="8" fill="#334060"/>
+                        <rect x="136" y="112" width="8" height="8" fill="#334060"/>
+                        <rect x="148" y="112" width="8" height="8" fill="#334060"/>
+                        <rect x="112" y="124" width="8" height="8" fill="#334060"/>
+                        <rect x="136" y="124" width="8" height="8" fill="#334060"/>
+                        <rect x="112" y="136" width="8" height="8" fill="#334060"/>
+                        <rect x="124" y="136" width="8" height="8" fill="#334060"/>
+                        <rect x="148" y="136" width="8" height="8" fill="#334060"/>
+                        <rect x="124" y="148" width="8" height="8" fill="#334060"/>
+                        <rect x="136" y="148" width="8" height="8" fill="#334060"/>
+                        <rect x="148" y="148" width="8" height="8" fill="#334060"/>
+                      </svg>
+                      <p class="qr-code-tip">扫码访问套餐充值页</p>
+                    </div>
+                    <div v-else class="qr-placeholder">
+                      <div class="qr-placeholder__icon">📷</div>
+                      <p class="qr-placeholder__text">点击预览生成二维码</p>
+                    </div>
+                  </transition>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 弹框：渠道选择 ============ -->
+      <el-dialog v-model="dialogs.channel" title="选择咨询渠道" width="400px" append-to-body>
+        <el-form label-width="80px">
+          <el-form-item label="咨询渠道" required>
+            <el-select v-model="selectedChannel" placeholder="请选择咨询渠道" style="width:100%">
+              <el-option v-for="c in channelOpts" :key="c.id" :label="c.name" :value="c.id"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="dialogs.channel = false">取消</el-button>
+          <el-button type="primary" @click="onChannelConfirm">确认创建工单</el-button>
+        </template>
+      </el-dialog>
+
+      <!-- ============ 弹框：设备详情 ============ -->
+      <el-dialog v-model="dialogs.deviceDetail" title="设备详情" width="900px" top="4vh" append-to-body @opened="initNetworkChart">
+        <div class="dialog-section">
+          <div class="section-title">WIFI信息</div>
+          <div class="table-scroll">
+            <el-table :data="wifiRows" border size="small">
+              <el-table-column prop="freq" label="频段" min-width="70"></el-table-column>
+              <el-table-column prop="switchStatus" label="开关状态" min-width="80" align="center"></el-table-column>
+              <el-table-column prop="ssid" label="WIFI名称" min-width="130"></el-table-column>
+              <el-table-column prop="password" label="密码" min-width="100"></el-table-column>
+              <el-table-column prop="encryptType" label="加密方式" min-width="90" align="center">
+                <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.encryptType||'-' }}</span></template>
+              </el-table-column>
+              <el-table-column prop="hidden" label="正在隐藏" min-width="80" align="center"></el-table-column>
+              <el-table-column prop="connectedCount" label="连接设备数" min-width="90" align="center"></el-table-column>
+            </el-table>
+          </div>
+        </div>
+        <div class="dialog-section">
+          <div class="section-title">在线状态</div>
+          <el-table :data="onlineRows" border size="small">
+            <el-table-column prop="changeTime" label="变更日期/时间" min-width="185"></el-table-column>
+            <el-table-column prop="deviceStatus" label="设备状态" min-width="120" align="center">
+              <template #default="{ row }">
+                <el-tag :type="row.deviceStatus === '在线' ? 'success' : 'info'" size="small">{{ row.deviceStatus }}</el-tag>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div class="pager-row">
+            <el-pagination v-model:current-page="onlinePage.current" v-model:page-size="onlinePage.size"
+              :page-sizes="[10,20,50]" :total="onlinePage.total"
+              layout="total, sizes, prev, pager, next, jumper" small></el-pagination>
+          </div>
+        </div>
+        <div class="dialog-section">
+          <div class="section-title">网络状态</div>
+          <div id="networkChart" style="height:200px;width:100%;"></div>
+        </div>
+      </el-dialog>
+
+      <!-- ============ 弹框：卡诊断日志（5 Tab）============ -->
+      <el-dialog v-model="dialogs.cardLog" title="卡诊断日志" width="1200px" top="3vh" append-to-body>
+        <el-tabs v-model="cardLogTab">
+
+          <!-- Tab1 设备办理记录 -->
+          <el-tab-pane label="设备办理记录" name="deviceOp">
+            <div class="table-scroll">
+              <el-table :data="deviceOpRows" border size="small" style="min-width:1080px;">
+                <el-table-column prop="customerName" label="客户简称" min-width="100"></el-table-column>
+                <el-table-column prop="businessType" label="业务办理" min-width="110"></el-table-column>
+                <el-table-column label="办理详情" min-width="70" align="center">
+                  <template #default><el-button link type="primary" size="small">查看</el-button></template>
+                </el-table-column>
+                <el-table-column label="备注" min-width="60" align="center">
+                  <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.remark||'-' }}</span></template>
+                </el-table-column>
+                <el-table-column prop="status" label="办理状态" min-width="90" align="center">
+                  <template #default="{ row }">
+                    <el-tag :type="row.status==='全部失败'?'danger':'success'" size="small">{{ row.status }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="submitter" label="提交人" min-width="70"></el-table-column>
+                <el-table-column prop="submitTime" label="提交时间" min-width="155"></el-table-column>
+                <el-table-column prop="orderId" label="订单号" min-width="165"></el-table-column>
+                <el-table-column prop="submitCount" label="提交数量" min-width="70" align="center"></el-table-column>
+                <el-table-column label="正在办理" min-width="70" align="center">
+                  <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.processing??'-' }}</span></template>
+                </el-table-column>
+                <el-table-column label="办理成功" min-width="70" align="center">
+                  <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.success??'-' }}</span></template>
+                </el-table-column>
+                <el-table-column prop="failed" label="办理失败" min-width="70" align="center">
+                  <template #default="{ row }"><span :style="row.failed>0?'color:var(--dangerColor)':''">{{ row.failed }}</span></template>
+                </el-table-column>
+                <el-table-column prop="finishTime" label="办理完结时间" min-width="155"></el-table-column>
+              </el-table>
+            </div>
+            <div class="pager-row"><el-pagination :total="2" layout="total, prev, pager, next" :page-size="10" small></el-pagination></div>
+          </el-tab-pane>
+
+          <!-- Tab2 运营侧业务办理 -->
+          <el-tab-pane label="运营侧业务办理" name="operatorSide">
+            <div class="table-scroll">
+              <el-table :data="operatorSideRows" border size="small" style="min-width:1800px;">
+                <el-table-column label="操作" min-width="115" fixed="left">
+                  <template #default>
+                    <el-button link type="primary" size="small">重新提交</el-button>
+                    <el-button link size="small">继续操作</el-button>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="orderId" label="订单编号" min-width="155">
+                  <template #default="{ row }"><el-button link type="primary" size="small">{{ row.orderId }}</el-button></template>
+                </el-table-column>
+                <el-table-column prop="customerName" label="客户简称" min-width="95"></el-table-column>
+                <el-table-column label="关联工单号" min-width="90" align="center">
+                  <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.relatedWO||'--' }}</span></template>
+                </el-table-column>
+                <el-table-column label="关联宜信工单号" min-width="125" align="center">
+                  <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.relatedYX||'--' }}</span></template>
+                </el-table-column>
+                <el-table-column prop="bizCategory" label="业务办理分类" min-width="100"></el-table-column>
+                <el-table-column prop="bizName" label="业务办理名称" min-width="115"></el-table-column>
+                <el-table-column prop="orderStatus" label="订单状态" min-width="80" align="center">
+                  <template #default="{ row }"><el-tag :type="row.orderStatus==='失败'?'danger':'success'" size="small">{{ row.orderStatus }}</el-tag></template>
+                </el-table-column>
+                <el-table-column prop="opType" label="操作类型" min-width="80"></el-table-column>
+                <el-table-column prop="submitTotal" label="提交总数" min-width="70" align="center"></el-table-column>
+                <el-table-column prop="verifyFailed" label="校验失败数量" min-width="100" align="center">
+                  <template #default="{ row }">
+                    <el-button v-if="row.verifyFailed>0" link type="danger" size="small">{{ row.verifyFailed }}</el-button>
+                    <span v-else style="color:var(--fontNormal)">{{ row.verifyFailed??'--' }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="processCount" label="办理数量" min-width="70" align="center"></el-table-column>
+                <el-table-column label="正在办理" min-width="70" align="center">
+                  <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.processing??'--' }}</span></template>
+                </el-table-column>
+                <el-table-column prop="success" label="办理成功" min-width="70" align="center"></el-table-column>
+                <el-table-column prop="failed" label="办理失败" min-width="70" align="center">
+                  <template #default="{ row }">
+                    <el-button v-if="row.failed>0" link type="danger" size="small">{{ row.failed }}</el-button>
+                    <span v-else>{{ row.failed }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="orderSource" label="订单来源" min-width="115"></el-table-column>
+                <el-table-column prop="startTime" label="发起时间" min-width="155"></el-table-column>
+                <el-table-column prop="endTime" label="完结时间" min-width="155"></el-table-column>
+                <el-table-column prop="initiator" label="发起人" min-width="70"></el-table-column>
+                <el-table-column prop="remark" label="备注" min-width="165"></el-table-column>
+                <el-table-column label="办理强度" min-width="70" align="center">
+                  <template #default><el-button link type="primary" size="small">下载</el-button></template>
+                </el-table-column>
+              </el-table>
+            </div>
+            <div class="pager-row"><el-pagination :total="3220" layout="total, sizes, prev, pager, next, jumper" :page-size="10" small></el-pagination></div>
+          </el-tab-pane>
+
+          <!-- Tab3 客户侧业务办理 -->
+          <el-tab-pane label="客户侧业务办理" name="customerSide">
+            <div class="table-scroll">
+              <el-table :data="customerSideRows" border size="small" style="min-width:1800px;">
+                <el-table-column label="操作" min-width="115" fixed="left">
+                  <template #default>
+                    <el-button link type="primary" size="small">重新提交</el-button>
+                    <el-button link size="small">继续操作</el-button>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="orderId" label="订单编号" min-width="155">
+                  <template #default="{ row }"><el-button link type="primary" size="small">{{ row.orderId }}</el-button></template>
+                </el-table-column>
+                <el-table-column prop="customerName" label="客户简称" min-width="135"></el-table-column>
+                <el-table-column label="关联工单号" min-width="90" align="center">
+                  <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.relatedWO||'--' }}</span></template>
+                </el-table-column>
+                <el-table-column label="关联宜信工单号" min-width="125" align="center">
+                  <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.relatedYX||'--' }}</span></template>
+                </el-table-column>
+                <el-table-column prop="bizCategory" label="业务办理分类" min-width="100"></el-table-column>
+                <el-table-column prop="bizName" label="业务办理名称" min-width="115"></el-table-column>
+                <el-table-column prop="orderStatus" label="订单状态" min-width="80" align="center">
+                  <template #default="{ row }"><el-tag :type="row.orderStatus==='失败'?'danger':'success'" size="small">{{ row.orderStatus }}</el-tag></template>
+                </el-table-column>
+                <el-table-column prop="opType" label="操作类型" min-width="80"></el-table-column>
+                <el-table-column prop="submitTotal" label="提交总数" min-width="70" align="center"></el-table-column>
+                <el-table-column prop="verifyFailed" label="校验失败数量" min-width="100" align="center">
+                  <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.verifyFailed??'--' }}</span></template>
+                </el-table-column>
+                <el-table-column prop="processCount" label="办理数量" min-width="70" align="center"></el-table-column>
+                <el-table-column label="正在办理" min-width="70" align="center">
+                  <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.processing??'--' }}</span></template>
+                </el-table-column>
+                <el-table-column prop="success" label="办理成功" min-width="70" align="center"></el-table-column>
+                <el-table-column prop="failed" label="办理失败" min-width="70" align="center">
+                  <template #default="{ row }">
+                    <el-button v-if="row.failed>0" link type="danger" size="small">{{ row.failed }}</el-button>
+                    <span v-else>{{ row.failed }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="orderSource" label="订单来源" min-width="80"></el-table-column>
+                <el-table-column prop="startTime" label="发起时间" min-width="155"></el-table-column>
+                <el-table-column prop="endTime" label="完结时间" min-width="155"></el-table-column>
+                <el-table-column prop="initiator" label="发起人" min-width="70"></el-table-column>
+                <el-table-column prop="remark" label="备注" min-width="145"></el-table-column>
+                <el-table-column label="办理强度" min-width="70" align="center">
+                  <template #default><el-button link type="primary" size="small">下载</el-button></template>
+                </el-table-column>
+              </el-table>
+            </div>
+            <div class="pager-row"><el-pagination :total="26575" layout="total, sizes, prev, pager, next, jumper" :page-size="10" small></el-pagination></div>
+          </el-tab-pane>
+
+          <!-- Tab4 OpenApi业务办理 -->
+          <el-tab-pane label="OpenApi业务办理" name="openApi">
+            <div class="table-scroll">
+              <el-table :data="openApiRows" border size="small" style="min-width:1400px;">
+                <el-table-column prop="orderType" label="订单类型" min-width="145"></el-table-column>
+                <el-table-column prop="orderId" label="订单编号" min-width="155"></el-table-column>
+                <el-table-column prop="company" label="所属企业" min-width="105"></el-table-column>
+                <el-table-column prop="orderStatus" label="订单状态" min-width="80" align="center">
+                  <template #default="{ row }"><el-tag type="success" size="small">{{ row.orderStatus }}</el-tag></template>
+                </el-table-column>
+                <el-table-column prop="successResult" label="成功结果" min-width="80" align="center">
+                  <template #default="{ row }"><el-button link type="primary" size="small">{{ row.successResult }}</el-button></template>
+                </el-table-column>
+                <el-table-column prop="failedResult" label="失败结果" min-width="80" align="center">
+                  <template #default="{ row }"><span :style="row.failedResult>0?'color:var(--dangerColor)':'color:var(--fontNormal)'">{{ row.failedResult }}</span></template>
+                </el-table-column>
+                <el-table-column prop="processCount" label="办理次数" min-width="70" align="center"></el-table-column>
+                <el-table-column prop="startTime" label="发起时间" min-width="155"></el-table-column>
+                <el-table-column prop="receiveTime" label="接受时间" min-width="155"></el-table-column>
+                <el-table-column prop="endTime" label="完结时间" min-width="155"></el-table-column>
+                <el-table-column prop="costTime" label="订单耗时" min-width="80" align="center"></el-table-column>
+                <el-table-column prop="channel" label="办理渠道" min-width="115"></el-table-column>
+                <el-table-column label="请求ip" min-width="100">
+                  <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.requestIp||'--' }}</span></template>
+                </el-table-column>
+                <el-table-column label="请求参数" min-width="80" align="center">
+                  <template #default><el-button link type="primary" size="small">详情</el-button></template>
+                </el-table-column>
+                <el-table-column prop="remark" label="备注" min-width="155">
+                  <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.remark||'--' }}</span></template>
+                </el-table-column>
+              </el-table>
+            </div>
+            <div class="pager-row"><el-pagination :total="12966" layout="total, sizes, prev, pager, next, jumper" :page-size="10" small></el-pagination></div>
+          </el-tab-pane>
+
+          <!-- Tab5 实名流水记录 -->
+          <el-tab-pane label="实名流水记录" name="realNameLog">
+            <el-table :data="realNameRows" border size="small">
+              <el-table-column prop="insertNo" label="插入号" min-width="80"></el-table-column>
+              <el-table-column prop="certSerial" label="实名认证流水号" min-width="155"></el-table-column>
+              <el-table-column prop="certStatusCode" label="认证状态编码" min-width="110"></el-table-column>
+              <el-table-column prop="certStatusName" label="认证状态名称" min-width="110"></el-table-column>
+              <el-table-column prop="certStatusDesc" label="认证状态描述" min-width="125"></el-table-column>
+              <el-table-column prop="certIccid" label="认证ICCID" min-width="175"></el-table-column>
+              <el-table-column prop="providerCate" label="供应商分类" min-width="100"></el-table-column>
+              <el-table-column prop="operationTime" label="操作时间" min-width="150"></el-table-column>
+              <el-table-column prop="certPersonName" label="认证人姓名" min-width="100"></el-table-column>
+              <template #empty><div style="padding:24px 0;color:var(--fontNormal);font-size:13px;text-align:center;">暂无数据</div></template>
+            </el-table>
+            <div class="pager-row"><el-pagination :total="0" layout="total, prev, pager, next" :page-size="10" small></el-pagination></div>
+          </el-tab-pane>
+
+        </el-tabs>
+      </el-dialog>
+
+      <!-- ============ 弹框：客诉记录日志 ============ -->
+      <el-dialog v-model="dialogs.complainLog" title="日志" width="80%" append-to-body>
+        <el-table :data="complainRows" border size="small" style="width:100%;">
+          <el-table-column prop="createTime" label="日期" min-width="180"></el-table-column>
+          <el-table-column prop="id" label="ID" min-width="180">
+            <template #default="{ row }">
+              <el-button link type="primary" size="small">{{ row.id }}</el-button>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" min-width="280">
+            <template #default="{ row }">
+              <el-button link type="primary" size="small">编辑</el-button>
+              <el-button link size="small" style="color:var(--dangerColor)">删除</el-button>
+              <el-button v-if="row.state === 'FAIL'" link type="primary" size="small">重新发起</el-button>
+              <el-button link type="primary" size="small">{{ row.appraiseLinkFlag ? '查看外链' : '生成评价外链' }}</el-button>
+            </template>
+          </el-table-column>
+          <el-table-column prop="businessName" label="业务类型" min-width="100">
+            <template #default="{ row }"><span>{{ row.businessName || '-' }}</span></template>
+          </el-table-column>
+          <el-table-column label="服务满意度" min-width="100">
+            <template #default="{ row }">
+              <span v-if="!row.appraiseLinkAddress" style="color:var(--fontNormal)">-</span>
+              <span v-else-if="row.appraiseLinkAddress && !row.appraiseFlag" style="color:var(--warningColor)">待评价</span>
+              <span v-else style="color:var(--successColor)">{{ row.appraise || '满意' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="channelName" label="咨询渠道" min-width="100">
+            <template #default="{ row }"><span>{{ row.channelName || '-' }}</span></template>
+          </el-table-column>
+          <el-table-column prop="creatorName" label="处理人" min-width="90">
+            <template #default="{ row }"><span>{{ row.creatorName || '-' }}</span></template>
+          </el-table-column>
+        </el-table>
+        <div class="pager-row">
+          <el-pagination :total="complainPage.total" v-model:current-page="complainPage.current"
+            v-model:page-size="complainPage.size" :page-sizes="[10,20,50,100]"
+            layout="total, sizes, prev, pager, next, jumper" small></el-pagination>
+        </div>
+      </el-dialog>
+
+      <!-- ============ 弹框：套餐更多（4 Tab）============ -->
+      <el-dialog v-model="dialogs.mealMore" title="套餐详情" width="980px" top="4vh" append-to-body>
+        <el-tabs v-model="mealMoreTab">
+
+          <!-- Tab1 套餐信息 -->
+          <el-tab-pane label="套餐信息" name="mealInfo">
+            <div class="table-scroll">
+              <el-table :data="mealInfoRows" border size="small" style="min-width:1080px;">
+                <el-table-column prop="mealName" label="套餐名称" min-width="200"></el-table-column>
+                <el-table-column prop="mealTotal" label="套餐总量" min-width="210"></el-table-column>
+                <el-table-column prop="usedFlow" label="已用量" min-width="210"></el-table-column>
+                <el-table-column prop="orderTime" label="订购时间" min-width="155"></el-table-column>
+                <el-table-column prop="effectStatus" label="生效状态" min-width="80" align="center">
+                  <template #default="{ row }"><el-tag :type="row.effectStatus==='生效'?'success':'danger'" size="small">{{ row.effectStatus }}</el-tag></template>
+                </el-table-column>
+                <el-table-column prop="effectTime" label="生效时间" min-width="100"></el-table-column>
+                <el-table-column prop="expireTime" label="失效时间" min-width="100"></el-table-column>
+                <el-table-column prop="isNormalOrder" label="是否普通订" min-width="90" align="center"></el-table-column>
+                <el-table-column label="普通订时间" min-width="90" align="center">
+                  <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.normalOrderTime||'--' }}</span></template>
+                </el-table-column>
+                <el-table-column prop="isTransferMeal" label="是否为转移套餐" min-width="115" align="center"></el-table-column>
+                <el-table-column label="转移时间" min-width="90" align="center">
+                  <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.transferTime||'--' }}</span></template>
+                </el-table-column>
+              </el-table>
+            </div>
+            <div class="pager-row"><el-pagination :total="5" layout="total, prev, pager, next" :page-size="10" small></el-pagination></div>
+          </el-tab-pane>
+
+          <!-- Tab2 权益卡信息 -->
+          <el-tab-pane label="权益卡信息" name="equityCard">
+            <el-table :data="equityCardRows" border size="small">
+              <el-table-column prop="cardName" label="权益卡名称" min-width="125"></el-table-column>
+              <el-table-column prop="orderTime" label="订购时间" min-width="165"></el-table-column>
+              <el-table-column prop="effectStatus" label="生效状态" min-width="80" align="center">
+                <template #default="{ row }"><el-tag :type="row.effectStatus==='生效'?'success':'danger'" size="small">{{ row.effectStatus }}</el-tag></template>
+              </el-table-column>
+              <el-table-column prop="effectTime" label="生效时间" min-width="100"></el-table-column>
+              <el-table-column prop="expireTime" label="失效时间" min-width="100"></el-table-column>
+              <el-table-column prop="isNormalOrder" label="是否普通订" min-width="90" align="center"></el-table-column>
+              <el-table-column label="普通订时间" min-width="90" align="center">
+                <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.normalOrderTime||'--' }}</span></template>
+              </el-table-column>
+              <el-table-column prop="isTransferMeal" label="是否为转移套管" min-width="110" align="center"></el-table-column>
+              <el-table-column label="转移时间" min-width="90" align="center">
+                <template #default="{ row }"><span style="color:var(--fontNormal)">{{ row.transferTime||'--' }}</span></template>
+              </el-table-column>
+            </el-table>
+            <div class="pager-row"><el-pagination :total="12" layout="total, prev, pager, next" :page-size="10" small></el-pagination></div>
+          </el-tab-pane>
+
+          <!-- Tab3 用户信息 -->
+          <el-tab-pane label="用户信息" name="userInfo">
+            <el-table :data="userInfoRows" border size="small">
+              <el-table-column prop="userId" label="用户PID" min-width="175"></el-table-column>
+              <el-table-column prop="phone" label="手机号" min-width="130"></el-table-column>
+              <el-table-column prop="createTime" label="创建时间" min-width="155"></el-table-column>
+              <el-table-column prop="walletId" label="钱包ID" min-width="175"></el-table-column>
+              <el-table-column prop="cashBalance" label="充值账户余额（元）" min-width="145" align="right"></el-table-column>
+              <el-table-column prop="benefitBalance" label="福利账户余额（元）" min-width="145" align="right"></el-table-column>
+            </el-table>
+          </el-tab-pane>
+
+          <!-- Tab4 储值信息 -->
+          <el-tab-pane label="储值信息" name="depositInfo">
+            <el-table :data="depositRows" border size="small">
+              <el-table-column prop="orderId" label="订单号" min-width="170"></el-table-column>
+              <el-table-column prop="createTime" label="创建时间" min-width="155"></el-table-column>
+              <el-table-column prop="transType" label="交易类型" min-width="85" align="center"></el-table-column>
+              <el-table-column prop="accountType" label="账户类型" min-width="105"></el-table-column>
+              <el-table-column prop="transAmount" label="交易金额（元）" min-width="130" align="right">
+                <template #default="{ row }">
+                  <span :style="row.transAmount>0?'color:var(--defaultColor)':''">{{ row.transAmount }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="balance" label="余额（元）" min-width="105" align="right"></el-table-column>
+            </el-table>
+            <div class="pager-row"><el-pagination :total="2" layout="total, prev, pager, next" :page-size="10" small></el-pagination></div>
+          </el-tab-pane>
+
+        </el-tabs>
+      </el-dialog>
+        </template>
+        <!-- ======================================================= -->
+        <!-- 页面2：客诉工单创建（新增"开票"业务类型） -->
+        <!-- ======================================================= -->
+        <template v-if="currentPage === 'complain'">
+        <el-breadcrumb separator="/">
+          <span style="cursor:pointer;">新增投诉</span>
+        </el-breadcrumb>
+
+        <div class="content-container has-action-container">
+          <el-form label-width="140px" label-position="right" class="create-complains-form">
+
+            <!-- ===== 基本信息 ===== -->
+            <div class="form-section">
+              <div class="form-section__title">基本信息</div>
+              <el-form-item label="业务类型：" required>
+                <el-select v-model="complainForm.business" placeholder="请选择" filterable style="width:280px">
+                  <el-option v-for="b in complainBusinessOpts" :key="b.value" :label="b.label" :value="b.value"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="子业务类型：">
+                <el-select v-model="complainForm.subBusiness" placeholder="请选择" filterable style="width:280px">
+                  <el-option label="套餐咨询" value="1"></el-option>
+                  <el-option label="退费咨询" value="2"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="咨询渠道：" required>
+                <el-select v-model="complainForm.channel" placeholder="请选择" filterable style="width:280px">
+                  <el-option v-for="c in channelOpts" :key="c.id" :label="c.name" :value="c.id"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="报障工单号：">
+                <el-input v-model="complainForm.faultOrderId" placeholder="请输入报障工单号" style="width:280px"></el-input>
+              </el-form-item>
+              <el-form-item label="是否需要跟进：">
+                <el-radio-group v-model="complainForm.follow">
+                  <el-radio :value="false">否</el-radio>
+                  <el-radio :value="true">是</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item v-if="complainForm.follow" label="选择跟进人：" required>
+                <el-select v-model="complainForm.followId" placeholder="请选择" filterable style="width:280px">
+                  <el-option v-for="f in followerOpts" :key="f.userid" :label="f.name" :value="f.userid"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item v-if="complainForm.follow" label="是否需要二次确认：">
+                <el-radio-group v-model="complainForm.doubleCheck">
+                  <el-radio :value="false">否</el-radio>
+                  <el-radio :value="true">是</el-radio>
+                </el-radio-group>
+              </el-form-item>
+            </div>
+
+            <!-- ===== 处理记录 ===== -->
+            <div class="form-section">
+              <div class="form-section__title">处理记录</div>
+              <el-form-item label="处理详情：">
+                <el-input class="super-input" v-model="complainForm.content" type="textarea" :rows="4" placeholder="不超过2000字符" maxlength="2000"></el-input>
+              </el-form-item>
+              <el-form-item label="微信群：">
+                <el-input v-model="complainForm.wechatGroupId" style="width:280px"></el-input>
+              </el-form-item>
+              <el-form-item label="处理时长：">
+                <div class="inline-field">
+                  <el-input class="small-size-input" v-model="complainForm.handleTime" placeholder="请输入处理时长"></el-input>
+                  <span class="unit-text">分钟</span>
+                </div>
+              </el-form-item>
+            </div>
+
+            <!-- ===== 卡片信息 ===== -->
+            <div class="form-section">
+              <div class="form-section__title">卡片信息</div>
+              <el-form-item label="客户行业类别：" required>
+                <el-select v-model="complainForm.customerIndustryCategory" placeholder="请选择" filterable style="width:280px">
+                  <el-option label="B端用户" value="B"></el-option>
+                  <el-option label="C端用户" value="C"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="卡片类型：">
+                <el-radio-group v-model="complainForm.targetType">
+                  <el-radio value="BOTH">卡号/ICCID</el-radio>
+                  <el-radio value="PINE_CODE" v-if="complainForm.customerIndustryCategory === 'C'">松果码</el-radio>
+                  <el-radio value="VIRTUAL_NUM" v-if="complainForm.customerIndustryCategory === 'B'">虚拟号</el-radio>
+                  <el-radio value="NET_ID">多网卡</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item label="上传类型：">
+                <el-radio-group v-model="complainForm.uploadType">
+                  <el-radio value="SINGLE">单卡</el-radio>
+                  <el-radio value="BATCH">批量</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item v-if="complainForm.uploadType === 'SINGLE'" label="卡号/ICCID：" required>
+                <el-input v-model="complainForm.targetId" style="width:280px">
+                  <template #append>
+                    <el-button type="primary" @click="onCheckCard">校验</el-button>
+                  </template>
+                </el-input>
+              </el-form-item>
+              <el-form-item v-else>
+                <el-button type="primary">批量上传</el-button>
+                <el-button link type="primary" style="margin: 0 20px">模板下载</el-button>
+              </el-form-item>
+
+              <!-- 单卡校验结果 -->
+              <div v-if="complainForm.targetId" class="card-verify-result">
+                <div class="card-verify-result__header">
+                  <span>卡片校验结果</span>
+                  <el-tag type="success" size="small" effect="light" round>已识别</el-tag>
+                </div>
+                <div class="card-verify-result__grid">
+                  <el-form-item label="区域：" label-width="100px"><span>华东大区</span></el-form-item>
+                  <el-form-item label="关联销售：" label-width="100px"><span>张三三</span></el-form-item>
+                  <el-form-item label="卡归属：" label-width="100px">自有</el-form-item>
+                  <el-form-item label="供应商账号：" label-width="100px"><span>上海联通FENGW0@蜂巢物联</span></el-form-item>
+                  <el-form-item label="客户名称：" label-width="100px"><span>北纬测试客户</span></el-form-item>
+                  <el-form-item label="网络类型：" label-width="100px"><span>4G/LTE</span></el-form-item>
+                </div>
+              </div>
+
+              <el-form-item label="设备型号：">
+                <el-input v-model="complainForm.device" style="width:280px"></el-input>
+              </el-form-item>
+            </div>
+
+            <!-- ===== 开票信息：业务类型=开票时展示（放在卡片信息下方） ===== -->
+            <div class="form-section" v-if="complainForm.business === 'INVOICE'">
+              <div class="form-section__title">开票信息</div>
+              <el-form-item label="发票抬头：" required>
+                <el-input v-model="invoiceForm.title" placeholder="请输入发票抬头" style="width:280px"></el-input>
+              </el-form-item>
+              <el-form-item label="手机号：" required>
+                <el-input v-model="invoiceForm.phone" placeholder="请输入手机号" style="width:280px"></el-input>
+              </el-form-item>
+              <el-form-item label="邮箱地址：" required>
+                <el-input v-model="invoiceForm.email" placeholder="请输入邮箱地址" style="width:280px"></el-input>
+              </el-form-item>
+              <el-form-item label="订单：" required>
+                <el-button type="primary" @click="onChooseInvoiceOrder">添加订单</el-button>
+              </el-form-item>
+              <el-form-item v-if="invoiceForm.orderList.length" label-width="140px" label=" ">
+                <el-table :data="invoiceForm.orderList" row-key="orderId" border size="small" style="width:100%;">
+                  <el-table-column label="物联网卡号" prop="cardId" min-width="160"></el-table-column>
+                  <el-table-column label="订单号" prop="orderId" min-width="170"></el-table-column>
+                  <el-table-column label="订单状态" prop="status" width="90"></el-table-column>
+                  <el-table-column label="交易金额（元）" prop="fee" width="120" align="right"></el-table-column>
+                  <el-table-column label="套餐" prop="serviceName" min-width="150"></el-table-column>
+                  <el-table-column label="订购时间" width="110">
+                    <template #default="{ row }">
+                      <span :style="isYearPassed(row.paysuccessTime) ? 'color: #DC4E41' : ''">{{ row.paysuccessTime }}</span>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="操作" width="70" align="center">
+                    <template #default="{ row }">
+                      <el-button link type="danger" @click="onRemoveInvoiceOrder(row)">删除</el-button>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </el-form-item>
+              <el-form-item v-else label-width="140px" label=" ">
+                <span style="color:var(--fontNormal);font-size:13px;">暂无订单，请点击"添加订单"</span>
+              </el-form-item>
+              <el-form-item label="开票金额：" required>
+                <el-input v-model="invoiceForm.amount" style="width:200px"></el-input>
+                <span class="unit-text" style="margin-left:6px;">元</span>
+                <span style="margin-left:10px;color:var(--fontNormal);font-size:12px;">默认=所选订单金额之和，可手动修改</span>
+              </el-form-item>
+              <el-form-item label="发票数量：" required>
+                <el-input v-model="invoiceForm.count" style="width:160px"></el-input>
+                <span class="unit-text" style="margin-left:6px;">张</span>
+              </el-form-item>
+              <el-form-item label="发票备注：">
+                <el-input class="super-input" type="textarea" :rows="3" v-model="invoiceForm.remark" placeholder="请输入发票备注"></el-input>
+              </el-form-item>
+              <el-form-item label="物联网卡号：">
+                <el-tag v-for="cardId in invoiceForm.cardIds" :key="cardId" style="margin:0 6px 6px 0;">{{ cardId }}</el-tag>
+                <span v-if="!invoiceForm.cardIds.length" style="color:var(--fontNormal);font-size:12px;">暂无（添加订单后自动填充，按卡号去重）</span>
+              </el-form-item>
+            </div>
+
+            <!-- ===== 附件 ===== -->
+            <div class="form-section">
+              <div class="form-section__title">附件</div>
+              <el-form-item label="附件：">
+                <el-button type="primary">上传</el-button>
+              </el-form-item>
+              <el-form-item label="图片凭证：">
+                <el-button class="avatar-uploader-icon-btn">＋</el-button>
+              </el-form-item>
+            </div>
+
+          </el-form>
+        </div>
+
+        <div class="action-wrapper">
+          <el-button size="large" type="primary" @click="onComplainSubmit">提交</el-button>
+          <el-button size="large" plain>重置</el-button>
+          <el-checkbox class="continue-add-check">继续新增</el-checkbox>
+        </div>
+
+        <!-- 选择开票订单弹框：每次仅支持查询一张卡的订单 -->
+        <el-dialog title="选择开票订单" v-model="invoiceDialog.visible" append-to-body width="820px">
+          <el-form :inline="true" style="margin-bottom:12px;">
+            <el-form-item label="物联网卡号">
+              <el-input v-model="invoiceDialog.cardIdInput" placeholder="请输入单张卡号查询" style="width:280px"></el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="onQueryInvoiceOrders">查询</el-button>
+            </el-form-item>
+          </el-form>
+          <el-alert title="每次仅支持查询一张卡的可开票订单；已添加或已开票的订单不可再次勾选，可多次点击【添加订单】添加不同卡的订单" type="info" :closable="false" show-icon style="margin-bottom:12px;"></el-alert>
+          <p style="margin-bottom: 10px">本次已选：{{ invoiceDialog.multipleSelection.length }}</p>
+          <el-table :data="invoiceDialog.tableData" row-key="orderId" ref="invoiceMultipleTable" @selection-change="onInvoiceSelectionChange" empty-text="请输入卡号并查询">
+            <el-table-column type="selection" width="55" :selectable="row => !row.invoiced && !invoiceAddedOrderIds.includes(row.orderId)"></el-table-column>
+            <el-table-column label="物联网卡号" prop="cardId" min-width="160"></el-table-column>
+            <el-table-column label="订单号" prop="orderId" min-width="170"></el-table-column>
+            <el-table-column label="订单状态" prop="status" width="90"></el-table-column>
+            <el-table-column label="交易金额（元）" prop="fee" width="120" align="right"></el-table-column>
+            <el-table-column label="套餐" prop="serviceName" min-width="150"></el-table-column>
+            <el-table-column label="订购时间" width="110">
+              <template #default="{ row }">
+                <span :style="isYearPassed(row.paysuccessTime) ? 'color: #DC4E41' : ''">{{ row.paysuccessTime }}</span>
+              </template>
+            </el-table-column>
+          </el-table>
+          <template #footer>
+            <el-button @click="invoiceDialog.visible = false">取消</el-button>
+            <el-button type="primary" @click="onConfirmInvoiceOrders">确定</el-button>
+          </template>
+        </el-dialog>
+        </template>
+        <!-- ======================================================= -->
+        <!-- 页面3：面包退款（线下退款新增"收款账号"必填项） -->
+        <!-- ======================================================= -->
+        <template v-if="currentPage === 'refund'">
+        <el-breadcrumb separator="/">
+          <el-breadcrumb-item><span style="cursor:pointer;">面包办理</span></el-breadcrumb-item>
+          <el-breadcrumb-item>退款订单</el-breadcrumb-item>
+        </el-breadcrumb>
+
+        <div class="content-container">
+          <div class="basic-info-container" style="max-width:900px;">
+            <h3 class="msg_title">
+              <i></i><b>已选退款订单</b>
+              <el-button size="small" type="primary" style="margin-left:auto" @click="onChooseRefundOrder">{{ refundForm.orderList.length ? '重新选择' : '选择订单' }}</el-button>
+            </h3>
+            <div class="box-border">
+              <template v-if="refundForm.orderList.length">
+                <el-collapse v-model="refundActiveNames">
+                  <el-collapse-item v-for="(order, index) in refundForm.orderList" :key="order.orderId" :name="order.orderId">
+                    <template #title>
+                      <div class="collapse-title">
+                        <el-badge :value="index + 1" type="primary"></el-badge>
+                        <div class="collapse-title__order">
+                          <span class="collapse-title__label">订单号</span>
+                          <span class="collapse-title__value">{{ order.orderId }}</span>
+                        </div>
+                      </div>
+                    </template>
+                    <div class="refund-section-label">订单信息</div>
+                    <div class="inline-block-form">
+                      <el-form-item label-width="120px" label="套餐名称：">{{ order.serviceName }}</el-form-item>
+                      <el-form-item label-width="120px" label="订单金额：">{{ order.fee }}元</el-form-item>
+                      <el-form-item label-width="120px" label="订购时间：">
+                        <span :style="isYearPassed(order.paysuccessTime) ? 'color: #DC4E41' : ''">{{ order.paysuccessTime }}</span>
+                        <span v-if="isYearPassed(order.paysuccessTime)" style="margin-left:6px;color:#DC4E41;font-size:12px;">（已超一年）</span>
+                      </el-form-item>
+                    </div>
+                    <div class="refund-section-label">退款信息</div>
+                    <div class="inline-block-form">
+                      <el-form-item label-width="120px" label="退款金额：" required>
+                        <el-input v-model="order.refundAmount" class="small-size-input" style="width:160px"></el-input><span class="unit-text">元</span>
+                      </el-form-item>
+                    </div>
+                    <el-form-item label-width="120px" required>
+                      <template #label>退款渠道：</template>
+                      <el-radio-group v-model="order.refundChannel">
+                        <el-radio value="ORIGINAL_REFUND" border>原路退款</el-radio>
+                        <el-radio value="OFFLINE_PAYMENT" border>线下退款</el-radio>
+                      </el-radio-group>
+                    </el-form-item>
+                    <!-- 新增：线下退款必填收款账号 -->
+                    <el-form-item label-width="120px" label="收款账号：" v-if="order.refundChannel === 'OFFLINE_PAYMENT'" required>
+                      <el-input v-model="order.collectionAccount" placeholder="请输入收款账号（开户名+账号+开户行）" style="width:400px"></el-input>
+                    </el-form-item>
+                    <el-form-item label-width="120px" label="退款原因：">
+                      <el-input type="textarea" :rows="2" v-model="order.refundReason" placeholder="请输入" style="width:400px"></el-input>
+                    </el-form-item>
+                  </el-collapse-item>
+                </el-collapse>
+
+                <el-form label-width="120px" style="margin-top:16px;">
+                  <el-form-item label="选择跟进人：" required>
+                    <el-select v-model="refundForm.followId" placeholder="请选择" style="width:260px" filterable>
+                      <el-option v-for="f in followerOpts" :key="f.userid" :label="f.name" :value="f.userid"></el-option>
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item>
+                    <el-button type="primary" @click="onRefundSubmit">创建并办理</el-button>
+                  </el-form-item>
+                </el-form>
+              </template>
+              <el-empty v-else description="请先选择退款订单" :image-size="80"></el-empty>
+            </div>
+          </div>
+        </div>
+
+        <!-- 选择退款订单弹框 -->
+        <el-dialog title="选择订单" v-model="refundDialog.visible" append-to-body width="968px">
+          <p style="margin-bottom: 10px">已选订单：{{ refundDialog.multipleSelection.length }}/5</p>
+          <el-table :data="refundDialog.tableData" row-key="orderId" ref="refundMultipleTable" @selection-change="onRefundSelectionChange" empty-text="暂无订单">
+            <el-table-column type="selection" width="55"></el-table-column>
+            <el-table-column label="订单号" prop="orderId" min-width="170"></el-table-column>
+            <el-table-column label="订单状态" prop="status" width="90"></el-table-column>
+            <el-table-column label="交易金额（元）" prop="fee" width="120" align="right"></el-table-column>
+            <el-table-column label="套餐" prop="serviceName" min-width="150"></el-table-column>
+            <el-table-column label="订购时间" width="110">
+              <template #default="{ row }">
+                <span :style="isYearPassed(row.paysuccessTime) ? 'color: #DC4E41' : ''">{{ row.paysuccessTime }}</span>
+              </template>
+            </el-table-column>
+          </el-table>
+          <template #footer>
+            <el-button @click="refundDialog.visible = false">取消</el-button>
+            <el-button type="primary" @click="onConfirmRefundOrders">确定</el-button>
+          </template>
+        </el-dialog>
+        </template>
+
+      </div><!-- /main-container -->
+      </main><!-- /p-main -->
+    </div><!-- /p-body -->
+  </div><!-- /portal-wrap -->
+</div><!-- /#app -->
+
+<script>
+const { createApp, ref, reactive, computed } = Vue;
+
+const app = createApp({
+  setup() {
+    const mainTab     = ref('device');
+    const cardTab     = ref('telecom');
+    const qrVisible   = ref(false);
+    const cardLogTab  = ref('deviceOp');
+    const mealMoreTab = ref('mealInfo');
+    const selectedChannel = ref(null);
+    const searchCardNum = ref('');
+    const onSearchConfirm = () => {
+      const num = searchCardNum.value.trim();
+      if (!num) { ElementPlus.ElMessage.warning('请输入卡号或设备号'); return; }
+      ElementPlus.ElMessage.success(`正在跳转查询：${num}（原型模拟）`);
+      searchCardNum.value = '';
+    };
+    const dialogs = reactive({ channel:false, deviceDetail:false, cardLog:false, mealMore:false, complainLog:false });
+
+    // ============ 页面切换（智能诊断 / 客诉工单创建 / 面包退款） ============
+    const currentPage = ref('diagnose');
+
+    // 通用：是否超过一年（与 CreatePine 现有 isYearPassed 逻辑保持一致）
+    const isYearPassed = date => {
+      if (date) {
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        return new Date(date).getTime() <= oneYearAgo.getTime();
+      }
+      return false;
+    };
+
+    const followerOpts = ref([
+      { userid: 'u1', name: '张三三' },
+      { userid: 'u2', name: '李四四' },
+      { userid: 'u3', name: '王五五' },
+    ]);
+
+    // ============ 页面2：客诉工单创建（新增"开票"业务类型） ============
+    const complainBusinessOpts = ref([
+      { value: 'CONSULT', label: '业务咨询' },
+      { value: 'COMPLAIN', label: '投诉工单' },
+      { value: 'FAULT', label: '故障工单' },
+      { value: 'INVOICE', label: '开票' },
+    ]);
+    const complainForm = reactive({
+      customerIndustryCategory: 'C',
+      channel: null,
+      business: 'INVOICE',
+      subBusiness: '',
+      faultOrderId: '',
+      follow: false,
+      followId: '',
+      doubleCheck: false,
+      content: '',
+      wechatGroupId: '',
+      handleTime: '',
+      targetType: 'PINE_CODE',
+      uploadType: 'SINGLE',
+      targetId: '',
+      device: '',
+    });
+    const onCheckCard = () => {
+      if (!complainForm.targetId) { ElementPlus.ElMessage.warning('请输入卡号'); return; }
+      ElementPlus.ElMessage.success('校验通过（原型模拟）');
+    };
+
+    // 开票信息表单
+    const invoiceForm = reactive({
+      orderList: [],
+      cardIds: [],
+      title: '',
+      amount: 0,
+      count: 1,
+      remark: '',
+      phone: '',
+      email: '',
+    });
+
+    // 可开票订单模拟数据池：一年内可开票订单 + 已开票（不可再选）+ 超一年（不展示，演示过滤）
+    const invoiceOrderPool = ref([
+      { cardId: '8986112320809379437', orderId: 'PN20260520000123', status: '已支付', fee: 9.9,  serviceName: '10GB月流量包',  paysuccessTime: '2026-05-20', invoiced: false },
+      { cardId: '8986112320809379438', orderId: 'PN20260318000456', status: '已支付', fee: 19.9, serviceName: '20GB季度流量包', paysuccessTime: '2026-03-18', invoiced: false },
+      { cardId: '8986112320809379438', orderId: 'PN20260110000789', status: '已支付', fee: 29.9, serviceName: '50GB半年流量包', paysuccessTime: '2026-01-10', invoiced: false },
+      { cardId: '8986112320809379440', orderId: 'PN20251215000234', status: '已支付', fee: 11.5, serviceName: '10GB月流量包',  paysuccessTime: '2025-12-15', invoiced: false },
+      { cardId: '8986112320809379440', orderId: 'PN20251008000567', status: '已支付', fee: 15.0, serviceName: '10GB月流量包',  paysuccessTime: '2025-10-08', invoiced: true },
+      { cardId: '8986112320809379439', orderId: 'PN20250310000999', status: '已支付', fee: 59.0, serviceName: '100GB年流量包', paysuccessTime: '2025-03-10', invoiced: false },
+    ]);
+
+    const invoiceDialog = reactive({
+      visible: false,
+      cardIdInput: '8986112320809379437',
+      tableData: [],
+      multipleSelection: [],
+    });
+    const invoiceAddedOrderIds = computed(() => invoiceForm.orderList.map(r => r.orderId));
+    window.__debug = { invoiceForm, invoiceDialog };
+
+    const onQueryInvoiceOrders = () => {
+      const cardId = invoiceDialog.cardIdInput.trim();
+      if (!cardId) {
+        ElementPlus.ElMessage.warning('请输入物联网卡号');
+        invoiceDialog.tableData = [];
+        return;
+      }
+      // 每次仅支持查询一张卡的可开票订单：仅展示一年内的订单
+      invoiceDialog.tableData = invoiceOrderPool.value.filter(o => o.cardId === cardId && !isYearPassed(o.paysuccessTime));
+    };
+    const onInvoiceSelectionChange = rows => { invoiceDialog.multipleSelection = rows; };
+    const onChooseInvoiceOrder = () => {
+      invoiceDialog.multipleSelection = [];
+      onQueryInvoiceOrders();
+      invoiceDialog.visible = true;
+    };
+    const recalcInvoiceFromOrders = () => {
+      invoiceForm.cardIds = [...new Set(invoiceForm.orderList.map(r => r.cardId))];
+      invoiceForm.amount = +invoiceForm.orderList.reduce((sum, r) => sum + r.fee, 0).toFixed(2);
+    };
+    const onConfirmInvoiceOrders = () => {
+      const rows = invoiceDialog.multipleSelection;
+      if (!rows.length) { ElementPlus.ElMessage.warning('请至少选择一笔订单'); return; }
+      const existingIds = new Set(invoiceForm.orderList.map(r => r.orderId));
+      const newRows = rows.filter(r => !existingIds.has(r.orderId)).map(r => ({ ...r }));
+      invoiceForm.orderList = [...invoiceForm.orderList, ...newRows];
+      recalcInvoiceFromOrders();
+      if (!invoiceForm.title) invoiceForm.title = '杜建钊';
+      if (!invoiceForm.phone) invoiceForm.phone = '13297223227';
+      if (!invoiceForm.email) invoiceForm.email = '812705432@qq.com';
+      invoiceDialog.visible = false;
+    };
+    const onRemoveInvoiceOrder = row => {
+      invoiceForm.orderList = invoiceForm.orderList.filter(r => r.orderId !== row.orderId);
+      recalcInvoiceFromOrders();
+    };
+    const onComplainSubmit = () => {
+      if (complainForm.business === 'INVOICE' && !invoiceForm.orderList.length) {
+        ElementPlus.ElMessage.warning('请先选择开票订单');
+        return;
+      }
+      ElementPlus.ElMessage.success('工单创建成功（原型模拟）');
+    };
+
+    // ============ 页面3：面包退款（线下退款新增"收款账号"必填项） ============
+    const refundForm = reactive({ orderList: [], followId: '' });
+    const refundActiveNames = ref([]);
+    const refundOrderPool = ref([
+      { orderId: 'PN20260520000123', status: '已支付', fee: 39.9, serviceName: '20GB季度流量包', paysuccessTime: '2026-05-20' },
+      { orderId: 'PN20260212000456', status: '已支付', fee: 19.9, serviceName: '10GB月流量包',  paysuccessTime: '2026-02-12' },
+      { orderId: 'PN20250310000789', status: '已支付', fee: 59.0, serviceName: '100GB年流量包', paysuccessTime: '2025-03-10' },
+      { orderId: 'PN20241120000234', status: '已支付', fee: 99.0, serviceName: '200GB年流量包', paysuccessTime: '2024-11-20' },
+    ]);
+    const refundDialog = reactive({ visible: false, tableData: [], multipleSelection: [] });
+    const onChooseRefundOrder = () => {
+      refundDialog.tableData = refundOrderPool.value;
+      refundDialog.visible = true;
+    };
+    const onRefundSelectionChange = rows => {
+      if (rows.length > 5) { ElementPlus.ElMessage.warning('最多可选择5笔订单'); }
+      refundDialog.multipleSelection = rows;
+    };
+    const onConfirmRefundOrders = () => {
+      const rows = refundDialog.multipleSelection;
+      if (!rows.length) { ElementPlus.ElMessage.warning('请至少选择一笔订单'); return; }
+      refundForm.orderList = rows.map(r => ({
+        ...r,
+        refundAmount: r.fee,
+        // 超一年默认线下退款（与退款渠道现有默认值逻辑保持一致，叠加"超一年"判断）
+        refundChannel: isYearPassed(r.paysuccessTime) ? 'OFFLINE_PAYMENT' : 'ORIGINAL_REFUND',
+        collectionAccount: '',
+        refundReason: '',
+      }));
+      refundActiveNames.value = rows.map(r => r.orderId);
+      refundDialog.visible = false;
+    };
+    const onRefundSubmit = () => {
+      const missingAccount = refundForm.orderList.some(o => o.refundChannel === 'OFFLINE_PAYMENT' && !o.collectionAccount);
+      if (missingAccount) { ElementPlus.ElMessage.warning('线下退款订单请填写收款账号'); return; }
+      ElementPlus.ElMessage.success('工单创建成功（原型模拟）');
+    };
+
+
+    const device = reactive({
+      deviceNo:'DV250703001', multiNetId:'5260730001',
+      deviceId:'DV-20240703-0001', deviceSn:'BTM-SN-20240703-001',
+      imei:'861400729749993', customer:'北纬测试xx11111111112',
+      brand:'BTM路由', slotOrder:'电信 → 移动 → 联通',
+      spec:'标准版', slotType:'三卡槽', onlineStatus:'在线', speedLimit:'50 Mbps',
+    });
+
+    const subCards = ref([
+      { name:'telecom', operatorDesc:'电信', isActive:true,
+        iccid:'89860625820058852382', msisdn:'861400729749993',
+        imsi:'460030123456789', isUsing:true,
+        networkType:'4G/LTE', providerAccount:'上海联通FENGW0@蜂巢物联（不限速）' },
+      { name:'mobile',  operatorDesc:'移动', isActive:false,
+        iccid:'89860060201234567890', msisdn:'135xxxxxxxx',
+        imsi:'460020987654321', isUsing:false,
+        networkType:'4G/LTE', providerAccount:'中国移动@标准套餐' },
+      { name:'unicom',  operatorDesc:'联通', isActive:false,
+        iccid:'89860100111222333444', msisdn:'155xxxxxxxx',
+        imsi:'460010112233445', isUsing:false,
+        networkType:'4G/LTE', providerAccount:'中国联通@标准套餐' },
+    ]);
+    const curSubCard = computed(() => subCards.value.find(c=>c.name===mainTab.value)||subCards.value[0]);
+
+    const diagMap = {
+      telecom:{ flowUsed:'0.000 MB', isAuth:false, realName:'未实名',
+        billingStatus:'正常计费', billingChangeTime:'2026-07-01 10:00:00',
+        commStatus:'正常', simOnline:'在线', cardStatus:'已启用  开机', lockReason:'-',
+        netStatus:'已连接', netChangeTime:'2026-07-03 08:30:00',
+        speedLimit:'-', flowCutThreshold:'1 GB', cardRegion:'-',
+        macBind:'机卡绑定', cmpIoH:'否', iohLimit:'无限制', regionBlacklist:'否', isFrozen:'否' },
+      mobile:{ flowUsed:'12.5 MB', isAuth:true, realName:'已实名',
+        billingStatus:'正常计费', billingChangeTime:'2026-06-30 09:00:00',
+        commStatus:'正常', simOnline:'离线', cardStatus:'已启用  停机', lockReason:'-',
+        netStatus:'未连接', netChangeTime:'2026-06-30 15:00:00',
+        speedLimit:'-', cardRegion:'-', macBind:'-', cmpIoH:'否', iohLimit:'无限制',
+        mobileSecondCtrl:'否', regionBlacklist:'否', isFrozen:'否' },
+      unicom:{ flowUsed:'0.000 MB', isAuth:false, realName:'未实名',
+        billingStatus:'暂停计费', billingChangeTime:'2026-06-28 11:00:00',
+        commStatus:'异常', simOnline:'离线', cardStatus:'已停用', lockReason:'-',
+        netStatus:'未连接', netChangeTime:'2026-06-28 11:05:00',
+        speedLimit:'-', cardRegion:'-', macBind:'-', cmpIoH:'否', iohLimit:'无限制',
+        regionBlacklist:'否', isFrozen:'否' },
+    };
+    const curDiag = computed(() => diagMap[cardTab.value]||diagMap.telecom);
+
+    const meal = reactive({ name:'中国联通逐阶梯套餐', used:'-', remain:'-', expiry:'-' });
+    const channelOpts = ref([{id:1,name:'电话'},{id:2,name:'微信'},{id:3,name:'在线客服'},{id:4,name:'邮件'}]);
+    const orderTypes  = ref([{value:1,label:'投诉工单'},{value:2,label:'故障工单'},{value:3,label:'咨询工单'}]);
+
+    const wifiRows = ref([
+      {freq:'2.4GHz',switchStatus:'开启',ssid:'BTMifi-06C1',password:'22226666',encryptType:'-',hidden:'否',connectedCount:0},
+      {freq:'5GHz',  switchStatus:'-',   ssid:'-',         password:'-',        encryptType:'-',hidden:'否',connectedCount:'-'},
+    ]);
+    const onlineRows = ref([
+      {changeTime:'2026-07-02 13:39:24',deviceStatus:'离线'},
+      {changeTime:'2026-07-02 13:39:24',deviceStatus:'在线'},
+      {changeTime:'2026-07-02 09:16:17',deviceStatus:'在线'},
+      {changeTime:'2026-07-02 08:52:20',deviceStatus:'离线'},
+      {changeTime:'2026-07-02 08:49:20',deviceStatus:'在线'},
+      {changeTime:'2026-07-02 08:46:18',deviceStatus:'离线'},
+      {changeTime:'2026-07-02 08:34:17',deviceStatus:'在线'},
+      {changeTime:'2026-07-02 08:29:49',deviceStatus:'离线'},
+      {changeTime:'2026-07-02 06:47:49',deviceStatus:'在线'},
+      {changeTime:'2026-07-02 06:47:49',deviceStatus:'离线'},
+    ]);
+    const onlinePage = reactive({current:1,size:10,total:114});
+
+    const deviceOpRows = ref([
+      {customerName:'严研磨坊1',businessType:'运营商限速',remark:'-',status:'全部失败',
+       submitter:'张三三',submitTime:'2026-01-16 14:23:44',orderId:'2915798184281243672',
+       submitCount:1,processing:null,success:null,failed:1,finishTime:'2026-01-16 14:23:47'},
+      {customerName:'严研磨坊1',businessType:'运营商限速',remark:'-',status:'全部失败',
+       submitter:'张三三',submitTime:'2026-01-16 14:23:00',orderId:'2915798184264466456',
+       submitCount:1,processing:null,success:null,failed:1,finishTime:'2026-01-16 14:23:02'},
+    ]);
+    const operatorSideRows = ref([
+      {orderId:'3185349173450426887',customerName:'zhj_t3',bizCategory:'卡业务',bizName:'网络状态-关闭',
+       orderStatus:'失败',opType:'运营类',submitTotal:2,verifyFailed:1,processCount:1,
+       processing:null,success:0,failed:1,orderSource:'SYSTEM',
+       startTime:'2026-07-02 16:30:56',endTime:'2026-07-02 16:39:11',initiator:'SYSTEM',remark:'销售订单驱动发起业务办理'},
+      {orderId:'3177808506208320863',customerName:'zhj_t3',bizCategory:'卡业务',bizName:'实名',
+       orderStatus:'失败',opType:'运营类',submitTotal:1,verifyFailed:0,processCount:1,
+       processing:null,success:0,failed:1,orderSource:'MEAL_EXPIRED',
+       startTime:'2026-07-01 05:06:47',endTime:'2026-07-01 05:06:48',initiator:'SYSTEM',remark:'续费入套餐新增'},
+      {orderId:'3177808506208264327',customerName:'zhj_t3',bizCategory:'卡业务',bizName:'计费状态-停机',
+       orderStatus:'失败',opType:'运营类',submitTotal:2,verifyFailed:0,processCount:2,
+       processing:null,success:0,failed:2,orderSource:'MEAL_EXPIRED',
+       startTime:'2026-07-01 02:00:19',endTime:'2026-07-01 02:08:36',initiator:'SYSTEM',remark:'续费入套餐新增'},
+    ]);
+    const customerSideRows = ref([
+      {orderId:'3180810173390209612',customerName:'北纬测试Ex111111111112',bizCategory:'卡业务',bizName:'套管自动绑订',
+       orderStatus:'失败',opType:'一般类',submitTotal:1,verifyFailed:null,processCount:1,
+       processing:null,success:0,failed:1,orderSource:'中台',
+       startTime:'2026-07-02 23:30:14',endTime:'2026-07-02 23:30:21',initiator:'系统',remark:'FromSystemAuto'},
+      {orderId:'3180810173390200601',customerName:'内 t3',bizCategory:'卡业务',bizName:'套管自动绑订',
+       orderStatus:'失败',opType:'一般类',submitTotal:2,verifyFailed:null,processCount:3,
+       processing:null,success:0,failed:1,orderSource:'中台',
+       startTime:'2026-07-02 23:30:12',endTime:'2026-07-02 23:30:22',initiator:'系统',remark:'FromSystemAuto'},
+      {orderId:'3180810173372432388',customerName:'计算器',bizCategory:'卡业务',bizName:'套管自动绑订',
+       orderStatus:'失败',opType:'一般类',submitTotal:170,verifyFailed:null,processCount:null,
+       processing:null,success:0,failed:170,orderSource:'中台',
+       startTime:'2026-07-02 23:30:11',endTime:'2026-07-02 23:30:26',initiator:'系统',remark:'FromSystemAuto'},
+    ]);
+    const openApiRows = ref([
+      {orderType:'组合开机/开网',orderId:'79538726120479617',company:'zhj_t3全称',
+       orderStatus:'已完成',successResult:1,failedResult:1,processCount:'-',
+       startTime:'2026-07-03 10:42:10',receiveTime:'2026-07-03 10:42:11',endTime:'2026-07-03 10:42:22',
+       costTime:'00:00:11',channel:'B2B2C订单',requestIp:'--',remark:'meal order open card'},
+      {orderType:'组合开机/开网',orderId:'79538237633503233',company:'zhj_t3全称',
+       orderStatus:'已完成',successResult:1,failedResult:0,processCount:'-',
+       startTime:'2026-07-03 10:31:10',receiveTime:'2026-07-03 10:31:11',endTime:'2026-07-03 10:31:21',
+       costTime:'00:00:10',channel:'B2B2C订单',requestIp:'--',remark:'meal order open card'},
+      {orderType:'deviceInit',orderId:'79538312995782401',company:'zhj_t3全称',
+       orderStatus:'已完成',successResult:1,failedResult:0,processCount:'-',
+       startTime:'2026-07-03 10:28:11',receiveTime:'2026-07-03 10:28:12',endTime:'2026-07-03 10:28:12',
+       costTime:'00:00:00',channel:'PLATFORM_ON_PREM',requestIp:'--',remark:''},
+    ]);
+    const realNameRows = ref([]);
+
+    const complainRows = ref([
+      { createTime:'2026-06-15 14:32:21', id:'WO20260615001', state:'FINISHED', appraiseLinkFlag:true, appraiseLinkAddress:'https://example.com/appraise/1', appraiseFlag:true, appraise:'满意', businessName:'卡信息查询', channelName:'微信', creatorName:'张三' },
+      { createTime:'2026-05-28 10:11:05', id:'WO20260528003', state:'FINISHED', appraiseLinkFlag:false, appraiseLinkAddress:'', appraiseFlag:false, appraise:'', businessName:'套餐续费', channelName:'电话', creatorName:'李四' },
+      { createTime:'2026-04-12 09:05:44', id:'WO20260412007', state:'FAIL', appraiseLinkFlag:false, appraiseLinkAddress:'', appraiseFlag:false, appraise:'', businessName:'卡状态变更', channelName:'在线客服', creatorName:'王五' },
+    ]);
+    const complainPage = reactive({ current:1, size:10, total:3 });
+
+    const mealInfoRows = ref([
+      {mealName:'[0425] 150G芭乐生效实套',mealTotal:'实量:150GB  虚量:150GB',usedFlow:'实量:0.00MB  虚量:0.00MB',orderTime:'2025-05-19 14:43:38',effectStatus:'失效',effectTime:'2025-04-09',expireTime:'2025-05-08',isNormalOrder:'否',isTransferMeal:'否'},
+      {mealName:'[0425] 66M普适单套餐',mealTotal:'实量:66MB  虚量:66MB',usedFlow:'实量:0.00MB  虚量:0.00MB',orderTime:'2025-05-13 10:01:51',effectStatus:'失效',effectTime:'2025-05-20',expireTime:'2025-07-27',isNormalOrder:'否',isTransferMeal:'否'},
+      {mealName:'[0417] 300MB普选单次套餐',mealTotal:'实量:300MB  虚量:307200MB',usedFlow:'实量:307200MB  虚量:307200MB',orderTime:'2025-06-14 15:20',effectStatus:'失效',effectTime:'2026-06-01',expireTime:'2026-06-30',isNormalOrder:'否',isTransferMeal:'否'},
+      {mealName:'[0417] 3GB加油包',mealTotal:'实量:3GB  虚量:3GB',usedFlow:'实量:1126.40MB  虚量:1126.40MB',orderTime:'2026-06-01 17:53:35',effectStatus:'失效',effectTime:'2026-06-01',expireTime:'2026-06-30',isNormalOrder:'否',isTransferMeal:'否'},
+    ]);
+    const equityCardRows = ref([
+      {cardName:'[0406] 极速用网',orderTime:'2025-05-06T15:39:09',effectStatus:'生效',effectTime:'2025-05-06',expireTime:'2026-06-04',isNormalOrder:'否',isTransferMeal:'否'},
+      {cardName:'[0406] 极速用网',orderTime:'2025-05-07T10:41:37',effectStatus:'生效',effectTime:'2025-05-07',expireTime:'2026-06-05',isNormalOrder:'否',isTransferMeal:'否'},
+      {cardName:'[0406] 极速用网',orderTime:'2025-06-12T17:14:26',effectStatus:'生效',effectTime:'2025-06-12',expireTime:'2026-06-10',isNormalOrder:'否',isTransferMeal:'否'},
+    ]);
+    const userInfoRows = ref([
+      {userId:'253290315582492939',phone:'18811720197',createTime:'2025-05-19 18:22:41',
+       walletId:'253290315582492939',cashBalance:'0.02',benefitBalance:'0.64'},
+    ]);
+    const depositRows = ref([
+      {orderId:'786739052582141963',createTime:'2026-06-11 14:22:33',transType:'储值',accountType:'福利余额',transAmount:0.01,balance:'0.64'},
+      {orderId:'786739052582141963',createTime:'2026-06-11 14:22:33',transType:'储值',accountType:'充值余额',transAmount:0.01,balance:'0.02'},
+    ]);
+
+    const onMainTabChange = (tab) => { if (tab !== 'device') cardTab.value = tab; };
+    const onChannelConfirm = () => {
+      if (!selectedChannel.value) { ElementPlus.ElMessage.warning('请选择咨询渠道'); return; }
+      ElementPlus.ElMessage.success('工单创建成功（原型模拟）');
+      dialogs.channel = false;
+    };
+
+    let chartInst = null;
+    const initNetworkChart = () => {
+      const dom = document.getElementById('networkChart');
+      if (!dom) return;
+      if (chartInst) chartInst.dispose();
+      chartInst = echarts.init(dom);
+      const times=[], vals=[];
+      const base = new Date('2026-07-02T10:00:00');
+      for (let i=0;i<=30;i++) {
+        const t = new Date(base.getTime()+i*15*60000);
+        times.push(`${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`);
+        vals.push(+((-62+Math.sin(i*0.45)*9+(Math.random()-0.5)*5)).toFixed(1));
+      }
+      chartInst.setOption({
+        tooltip:{ trigger:'axis', formatter:p=>`${p[0].name}<br/>信号强度: <b>${p[0].value} dBm</b>`,
+          backgroundColor:'rgba(26,32,64,0.85)', textStyle:{color:'#fff',fontSize:12} },
+        grid:{top:18,right:16,bottom:28,left:54},
+        xAxis:{ type:'category', data:times, boundaryGap:false,
+          axisLabel:{fontSize:11,color:'#8A93A8',interval:4},
+          axisLine:{lineStyle:{color:'#E4E9F2'}}, axisTick:{show:false} },
+        yAxis:{ type:'value', min:-80, max:0, interval:20,
+          axisLabel:{fontSize:11,color:'#8A93A8'},
+          splitLine:{lineStyle:{color:'#E4E9F2',type:'dashed'}},
+          axisLine:{show:false}, axisTick:{show:false} },
+        series:[{ type:'line', data:vals, smooth:0.4, symbol:'none',
+          lineStyle:{color:'#4A80F7',width:2},
+          areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,
+            colorStops:[{offset:0,color:'rgba(74,128,247,0.22)'},{offset:1,color:'rgba(74,128,247,0.02)'}]}} }],
+      });
+    };
+
+    return {
+      mainTab, cardTab, qrVisible, cardLogTab, mealMoreTab, selectedChannel,
+      searchCardNum, onSearchConfirm,
+      dialogs, device, subCards, curSubCard, curDiag, meal,
+      channelOpts, orderTypes,
+      wifiRows, onlineRows, onlinePage,
+      deviceOpRows, operatorSideRows, customerSideRows, openApiRows, realNameRows,
+      mealInfoRows, equityCardRows, userInfoRows, depositRows,
+      complainRows, complainPage,
+      onMainTabChange, onChannelConfirm, initNetworkChart,
+      currentPage, isYearPassed, followerOpts,
+      complainBusinessOpts, complainForm, onCheckCard,
+      invoiceForm, invoiceDialog, invoiceAddedOrderIds, onQueryInvoiceOrders, onInvoiceSelectionChange,
+      onChooseInvoiceOrder, onConfirmInvoiceOrders, onRemoveInvoiceOrder, onComplainSubmit,
+      refundForm, refundActiveNames, refundDialog,
+      onChooseRefundOrder, onRefundSelectionChange, onConfirmRefundOrders, onRefundSubmit,
+    };
+  },
+});
+
+app.use(ElementPlus);
+for (const [k, v] of Object.entries(ElementPlusIconsVue)) app.component(k, v);
+app.mount('#app');
+</script>
+</body>
+</html>
