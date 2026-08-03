@@ -1,0 +1,26 @@
+index.html
+  h_f2bdeba8b53712 1232-1238,1246,1492,1499-1501,1546,1809
+  s_5d181957ff75ee::t_462739ed91443d 7-11
+  s_5d181957ff75ee::t_e74855685a25ec 1280-1288,1294,1515-1516,1524-1526,1530-1535
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "be04b164788e2f479c60d6bb12b2550832087874",
+  "prompts": {},
+  "humans": {
+    "h_f2bdeba8b53712": {
+      "author": "liuyx <2379303238@qq.com>"
+    }
+  },
+  "sessions": {
+    "s_5d181957ff75ee": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "245c513a-6cd7-4b98-ad71-822bfc8428a3",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "liuyx <2379303238@qq.com>"
+    }
+  }
+}
