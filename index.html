@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>设备诊断原型 · 智能诊断</title>
-  <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-  <script src="https://unpkg.com/element-plus/dist/index.full.min.js"></script>
-  <script src="https://unpkg.com/@element-plus/icons-vue/dist/index.iife.min.js"></script>
-  <script src="https://unpkg.com/echarts/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css" />
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue/dist/index.iife.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
   <style>
     :root {
       --defaultColor: #4A80F7;
@@ -1229,7 +1229,13 @@
               <el-form-item v-else label-width="140px" label=" ">
                 <span style="color:var(--fontNormal);font-size:13px;">暂无订单，请点击"添加订单"</span>
               </el-form-item>
-              <el-form-item label="开票金额：" required>
+              <el-form-item label="是否合并开票：" required>
+                <el-radio-group v-model="invoiceForm.mergeInvoice" @change="onMergeInvoiceChange">
+                  <el-radio :value="true">是</el-radio>
+                  <el-radio :value="false">否</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item v-if="invoiceForm.mergeInvoice" label="开票金额：" required>
                 <el-input v-model="invoiceForm.amount" style="width:200px"></el-input>
                 <span class="unit-text" style="margin-left:6px;">元</span>
                 <span style="margin-left:10px;color:var(--fontNormal);font-size:12px;">默认=所选订单金额之和，可手动修改</span>
@@ -1237,6 +1243,7 @@
               <el-form-item label="发票数量：" required>
                 <el-input v-model="invoiceForm.count" style="width:160px"></el-input>
                 <span class="unit-text" style="margin-left:6px;">张</span>
+                <span style="margin-left:10px;color:var(--fontNormal);font-size:12px;">{{ invoiceForm.mergeInvoice ? '默认=1张，可手动修改' : '默认=订单数，可手动修改' }}</span>
               </el-form-item>
               <el-form-item label="发票备注：">
                 <el-input class="super-input" type="textarea" :rows="3" v-model="invoiceForm.remark" placeholder="请输入发票备注"></el-input>
@@ -1270,14 +1277,21 @@
         <!-- 选择开票订单弹框：每次仅支持查询一张卡的订单 -->
         <el-dialog title="选择开票订单" v-model="invoiceDialog.visible" append-to-body width="820px">
           <el-form :inline="true" style="margin-bottom:12px;">
-            <el-form-item label="物联网卡号">
-              <el-input v-model="invoiceDialog.cardIdInput" placeholder="请输入单张卡号查询" style="width:280px"></el-input>
+            <el-form-item label="查询条件">
+              <el-input v-model="invoiceDialog.queryValue" :placeholder="invoiceDialog.queryType === 'orderId' ? '请输入订单号查询' : '请输入单张卡号查询'" style="width:320px">
+                <template #prepend>
+                  <el-select v-model="invoiceDialog.queryType" style="width:110px">
+                    <el-option label="物联网卡号" value="cardId"></el-option>
+                    <el-option label="订单号" value="orderId"></el-option>
+                  </el-select>
+                </template>
+              </el-input>
             </el-form-item>
             <el-form-item>
               <el-button type="primary" @click="onQueryInvoiceOrders">查询</el-button>
             </el-form-item>
           </el-form>
-          <el-alert title="每次仅支持查询一张卡的可开票订单；已添加或已开票的订单不可再次勾选，可多次点击【添加订单】添加不同卡的订单" type="info" :closable="false" show-icon style="margin-bottom:12px;"></el-alert>
+          <el-alert title="按物联网卡号查询时仅支持查询一张卡的可开票订单；按订单号查询时仅返回该笔订单；已添加或已开票的订单不可再次勾选，可多次点击【添加订单】添加不同订单" type="info" :closable="false" show-icon style="margin-bottom:12px;"></el-alert>
           <p style="margin-bottom: 10px">本次已选：{{ invoiceDialog.multipleSelection.length }}</p>
           <el-table :data="invoiceDialog.tableData" row-key="orderId" ref="invoiceMultipleTable" @selection-change="onInvoiceSelectionChange" empty-text="请输入卡号并查询">
             <el-table-column type="selection" width="55" :selectable="row => !row.invoiced && !invoiceAddedOrderIds.includes(row.orderId)"></el-table-column>
@@ -1475,12 +1489,16 @@ const app = createApp({
       orderList: [],
       cardIds: [],
       title: '',
+      mergeInvoice: true,
       amount: 0,
       count: 1,
       remark: '',
       phone: '',
       email: '',
     });
+    const onMergeInvoiceChange = () => {
+      invoiceForm.count = invoiceForm.mergeInvoice ? 1 : invoiceForm.orderList.length;
+    };
 
     // 可开票订单模拟数据池：一年内可开票订单 + 已开票（不可再选）+ 超一年（不展示，演示过滤）
     const invoiceOrderPool = ref([
@@ -1494,7 +1512,8 @@ const app = createApp({
 
     const invoiceDialog = reactive({
       visible: false,
-      cardIdInput: '8986112320809379437',
+      queryType: 'cardId',
+      queryValue: '8986112320809379437',
       tableData: [],
       multipleSelection: [],
     });
@@ -1502,14 +1521,18 @@ const app = createApp({
     window.__debug = { invoiceForm, invoiceDialog };
 
     const onQueryInvoiceOrders = () => {
-      const cardId = invoiceDialog.cardIdInput.trim();
-      if (!cardId) {
-        ElementPlus.ElMessage.warning('请输入物联网卡号');
+      const keyword = invoiceDialog.queryValue.trim();
+      if (!keyword) {
+        ElementPlus.ElMessage.warning(invoiceDialog.queryType === 'orderId' ? '请输入订单号' : '请输入物联网卡号');
         invoiceDialog.tableData = [];
         return;
       }
-      // 每次仅支持查询一张卡的可开票订单：仅展示一年内的订单
-      invoiceDialog.tableData = invoiceOrderPool.value.filter(o => o.cardId === cardId && !isYearPassed(o.paysuccessTime));
+      // 按物联网卡号查询：仅支持查询一张卡的可开票订单；按订单号查询：精确匹配该笔订单
+      // 均仅展示一年内的订单
+      invoiceDialog.tableData = invoiceOrderPool.value.filter(o => {
+        const matched = invoiceDialog.queryType === 'orderId' ? o.orderId === keyword : o.cardId === keyword;
+        return matched && !isYearPassed(o.paysuccessTime);
+      });
     };
     const onInvoiceSelectionChange = rows => { invoiceDialog.multipleSelection = rows; };
     const onChooseInvoiceOrder = () => {
@@ -1520,6 +1543,7 @@ const app = createApp({
     const recalcInvoiceFromOrders = () => {
       invoiceForm.cardIds = [...new Set(invoiceForm.orderList.map(r => r.cardId))];
       invoiceForm.amount = +invoiceForm.orderList.reduce((sum, r) => sum + r.fee, 0).toFixed(2);
+      invoiceForm.count = invoiceForm.mergeInvoice ? 1 : invoiceForm.orderList.length;
     };
     const onConfirmInvoiceOrders = () => {
       const rows = invoiceDialog.multipleSelection;
@@ -1782,7 +1806,7 @@ const app = createApp({
       currentPage, isYearPassed, followerOpts,
       complainBusinessOpts, complainForm, onCheckCard,
       invoiceForm, invoiceDialog, invoiceAddedOrderIds, onQueryInvoiceOrders, onInvoiceSelectionChange,
-      onChooseInvoiceOrder, onConfirmInvoiceOrders, onRemoveInvoiceOrder, onComplainSubmit,
+      onChooseInvoiceOrder, onConfirmInvoiceOrders, onRemoveInvoiceOrder, onComplainSubmit, onMergeInvoiceChange,
       refundForm, refundActiveNames, refundDialog,
       onChooseRefundOrder, onRefundSelectionChange, onConfirmRefundOrders, onRefundSubmit,
     };
