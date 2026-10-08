@@ -1,0 +1,21 @@
+index.html
+  s_5760cd91f6f467::t_59a8cc8ae45f7e 654,656-696
+  s_5760cd91f6f467::t_fc61bcec65415a 481,655,1438
+  s_5760cd91f6f467::t_30d4812ebe4afe 697-698
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a0d4f3c1587fc59836013e3236f4c1d1ade35422",
+  "prompts": {},
+  "sessions": {
+    "s_5760cd91f6f467": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "355a76a5-8297-494a-a6e1-232c069d949b",
+        "model": "copilot/gpt-5.6-luna"
+      },
+      "human_author": "liuyx <2379303238@qq.com>"
+    }
+  }
+}
