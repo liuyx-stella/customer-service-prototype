@@ -478,6 +478,7 @@
                       </el-dropdown-menu>
                     </template>
                   </el-dropdown>
+                  <el-button @click="dialogs.cPreview = true">C端页面预览</el-button>
                 </div>
               </div>
 
@@ -631,51 +632,6 @@
               </div>
             </div><!-- /flex-left -->
 
-            <!-- 右栏 -->
-            <div class="flex-item flex-right">
-              <div class="qr-preview-card">
-                <div class="qr-preview-card__header">
-                  <h3 class="msg_title"><i></i><b>C端页面预览</b></h3>
-                  <div class="qr-preview-card__actions">
-                    <el-button type="primary" size="small" @click="qrVisible = !qrVisible">{{ qrVisible ? '收起' : '预览' }}</el-button>
-                    <el-button size="small">复制充值链接</el-button>
-                  </div>
-                </div>
-                <div class="qr-preview-card__body">
-                  <transition name="qr-scale">
-                    <div v-if="qrVisible" class="qr-code-container">
-                      <svg width="180" height="180" viewBox="0 0 180 180" style="border:1px solid var(--borderBase);border-radius:4px;background:#fff;padding:6px;">
-                        <rect width="180" height="180" fill="#fff"/>
-                        <rect x="10" y="10" width="58" height="58" rx="3" fill="none" stroke="#334060" stroke-width="4"/>
-                        <rect x="22" y="22" width="34" height="34" fill="#334060" rx="2"/>
-                        <rect x="112" y="10" width="58" height="58" rx="3" fill="none" stroke="#334060" stroke-width="4"/>
-                        <rect x="124" y="22" width="34" height="34" fill="#334060" rx="2"/>
-                        <rect x="10" y="112" width="58" height="58" rx="3" fill="none" stroke="#334060" stroke-width="4"/>
-                        <rect x="22" y="124" width="34" height="34" fill="#334060" rx="2"/>
-                        <rect x="112" y="112" width="8" height="8" fill="#334060"/>
-                        <rect x="124" y="112" width="8" height="8" fill="#334060"/>
-                        <rect x="136" y="112" width="8" height="8" fill="#334060"/>
-                        <rect x="148" y="112" width="8" height="8" fill="#334060"/>
-                        <rect x="112" y="124" width="8" height="8" fill="#334060"/>
-                        <rect x="136" y="124" width="8" height="8" fill="#334060"/>
-                        <rect x="112" y="136" width="8" height="8" fill="#334060"/>
-                        <rect x="124" y="136" width="8" height="8" fill="#334060"/>
-                        <rect x="148" y="136" width="8" height="8" fill="#334060"/>
-                        <rect x="124" y="148" width="8" height="8" fill="#334060"/>
-                        <rect x="136" y="148" width="8" height="8" fill="#334060"/>
-                        <rect x="148" y="148" width="8" height="8" fill="#334060"/>
-                      </svg>
-                      <p class="qr-code-tip">扫码访问套餐充值页</p>
-                    </div>
-                    <div v-else class="qr-placeholder">
-                      <div class="qr-placeholder__icon">📷</div>
-                      <p class="qr-placeholder__text">点击预览生成二维码</p>
-                    </div>
-                  </transition>
-                </div>
-              </div>
-            </div>
-
           </div>
         </div>
       </div>
@@ -693,6 +649,51 @@
           <el-button @click="dialogs.channel = false">取消</el-button>
           <el-button type="primary" @click="onChannelConfirm">确认创建工单</el-button>
         </template>
+      </el-dialog>
+
+      <!-- ============ 弹框：C端页面预览 ============ -->
+      <el-dialog v-model="dialogs.cPreview" title="C端页面预览" width="420px" append-to-body>
+        <div class="qr-preview-card">
+          <div class="qr-preview-card__header">
+            <h3 class="msg_title"><i></i><b>套餐充值页</b></h3>
+            <div class="qr-preview-card__actions">
+              <el-button type="primary" size="small" @click="qrVisible = !qrVisible">{{ qrVisible ? '收起' : '预览' }}</el-button>
+              <el-button size="small">复制充值链接</el-button>
+            </div>
+          </div>
+          <div class="qr-preview-card__body">
+            <transition name="qr-scale">
+              <div v-if="qrVisible" class="qr-code-container">
+                <svg width="180" height="180" viewBox="0 0 180 180" style="border:1px solid var(--borderBase);border-radius:4px;background:#fff;padding:6px;">
+                  <rect width="180" height="180" fill="#fff"/>
+                  <rect x="10" y="10" width="58" height="58" rx="3" fill="none" stroke="#334060" stroke-width="4"/>
+                  <rect x="22" y="22" width="34" height="34" fill="#334060" rx="2"/>
+                  <rect x="112" y="10" width="58" height="58" rx="3" fill="none" stroke="#334060" stroke-width="4"/>
+                  <rect x="124" y="22" width="34" height="34" fill="#334060" rx="2"/>
+                  <rect x="10" y="112" width="58" height="58" rx="3" fill="none" stroke="#334060" stroke-width="4"/>
+                  <rect x="22" y="124" width="34" height="34" fill="#334060" rx="2"/>
+                  <rect x="112" y="112" width="8" height="8" fill="#334060"/>
+                  <rect x="124" y="112" width="8" height="8" fill="#334060"/>
+                  <rect x="136" y="112" width="8" height="8" fill="#334060"/>
+                  <rect x="148" y="112" width="8" height="8" fill="#334060"/>
+                  <rect x="112" y="124" width="8" height="8" fill="#334060"/>
+                  <rect x="136" y="124" width="8" height="8" fill="#334060"/>
+                  <rect x="112" y="136" width="8" height="8" fill="#334060"/>
+                  <rect x="124" y="136" width="8" height="8" fill="#334060"/>
+                  <rect x="148" y="136" width="8" height="8" fill="#334060"/>
+                  <rect x="124" y="148" width="8" height="8" fill="#334060"/>
+                  <rect x="136" y="148" width="8" height="8" fill="#334060"/>
+                  <rect x="148" y="148" width="8" height="8" fill="#334060"/>
+                </svg>
+                <p class="qr-code-tip">扫码访问套餐充值页</p>
+              </div>
+              <div v-else class="qr-placeholder">
+                <div class="qr-placeholder__icon">📷</div>
+                <p class="qr-placeholder__text">点击预览生成二维码</p>
+              </div>
+            </transition>
+          </div>
+        </div>
       </el-dialog>
 
       <!-- ============ 弹框：设备详情 ============ -->
@@ -1434,7 +1435,7 @@ const app = createApp({
       ElementPlus.ElMessage.success(`正在跳转查询：${num}（原型模拟）`);
       searchCardNum.value = '';
     };
-    const dialogs = reactive({ channel:false, deviceDetail:false, cardLog:false, mealMore:false, complainLog:false });
+    const dialogs = reactive({ channel:false, deviceDetail:false, cardLog:false, mealMore:false, complainLog:false, cPreview:false });
 
     // ============ 页面切换（智能诊断 / 客诉工单创建 / 面包退款） ============
     const currentPage = ref('diagnose');
