@@ -295,6 +295,84 @@
     .table-scroll { overflow-x: auto; }
     .pager-row { margin-top: 10px; display: flex; justify-content: flex-end; }
 
+    /* ===== AI意图审核待办原型 ===== */
+    .ai-review-page { padding-bottom: 80px; }
+    .ai-review-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; margin-bottom: 12px;
+      background: var(--bgCard); border: 1px solid var(--borderBase);
+      border-radius: var(--radiusMd); box-shadow: var(--shadowSm);
+    }
+    .ai-review-header__title { display: flex; align-items: center; gap: 10px; }
+    .ai-review-header__title h2 { color: var(--fontTitle); font-size: 18px; font-weight: 600; }
+    .ai-review-header__meta { color: var(--fontNormal); font-size: 12px; margin-top: 3px; }
+    .ai-review-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .ai-review-back { color: var(--fontNormal); font-size: 13px; cursor: pointer; }
+    .ai-review-back:hover { color: var(--defaultColor); }
+    .ai-review-detail-header { margin-bottom: 14px; padding: 18px 20px 14px; background: var(--bgCard); border: 1px solid var(--borderBase); border-radius: var(--radiusMd); box-shadow: var(--shadowSm); }
+    .ai-review-order-title { display: flex; align-items: center; justify-content: space-between; padding: 4px 0 12px; }
+    .ai-review-order-title h1 { color: var(--fontTitle); font-size: 18px; font-weight: 600; }
+    .ai-review-order-title__meta { color: var(--fontNormal); font-size: 12px; margin-top: 4px; }
+    .ai-review-section {
+      margin-bottom: 14px; padding: 0 20px 18px;
+      background: var(--bgCard); border: 1px solid var(--borderBase);
+      border-radius: var(--radiusMd); box-shadow: var(--shadowSm);
+    }
+    .ai-review-section__title {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 0; margin-bottom: 12px;
+      color: var(--fontTitle); font-size: 14px; font-weight: 600;
+      border-bottom: 1px solid var(--borderBase);
+    }
+    .ai-review-section__title::before {
+      content: ''; width: 3px; height: 14px; background: var(--defaultColor); border-radius: 2px;
+    }
+    .ai-review-chat { display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto; padding: 4px 8px; background: #fafbfe; border: 1px solid var(--borderBase); border-radius: var(--radiusSm); }
+    .ai-review-chat-room { margin: 0 0 6px 10px; font-size: 13px;}
+    .ai-review-chat__row { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; }
+    .ai-review-chat__row.ai { flex-direction: row-reverse; }
+    .ai-review-chat__identity { position: relative; flex: 0 0 34px; width: 34px; height: 30px; display: flex; align-items: center; justify-content: center; }
+    .ai-review-chat__name { position: absolute; top: -2px; left: 40px; max-width: 54px; overflow: hidden; color: var(--fontNormal); font-size: 10px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+    .ai-review-chat__row.ai .ai-review-chat__name { left: auto; right: 40px; }
+    .ai-review-chat__avatar { width: 30px; height: 30px; flex: 0 0 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; background: #91a0b8; }
+    .ai-review-chat__row.ai .ai-review-chat__avatar { background: var(--defaultColor); }
+    .ai-review-chat__bubble { max-width: 78%; margin-top: 14px; padding: 8px 11px; border-radius: 4px 10px 10px 10px; background: #fff; border: 1px solid var(--borderBase); color: var(--fontDefault); font-size: 13px; line-height: 1.6; }
+    .ai-review-chat__row.ai .ai-review-chat__bubble { border-radius: 10px 4px 10px 10px; background: var(--defaultColorLighter); border-color: #d8e4ff; }
+    .ai-review-result { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .ai-review-result__item { padding: 12px; background: var(--bgHover); border: 1px solid var(--borderBase); border-radius: var(--radiusSm); }
+    .ai-review-result__label { color: var(--fontNormal); font-size: 12px; margin-bottom: 4px; }
+    .ai-review-result__value { color: var(--fontTitle); font-size: 14px; font-weight: 600; }
+    .ai-review-action { padding: 12px; background: #fffaf0; border: 1px solid #f7dca0; border-radius: var(--radiusSm); color: #8a5b00; }
+    .ai-review-proof { display: flex; align-items: center; gap: 12px; }
+    .ai-review-proof__thumb { width: 72px; height: 58px; display: flex; align-items: center; justify-content: center; background: #f5f7fa; border: 1px solid var(--borderBase); border-radius: var(--radiusSm); color: var(--fontNormal); font-size: 12px; }
+    .ai-review-process { display: flex; flex-direction: column; gap: 10px; }
+    .ai-review-process__item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; background: #fafbfe; border: 1px solid var(--borderBase); border-radius: var(--radiusSm); }
+    .ai-review-process__index { flex: 0 0 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--defaultColor); color: #fff; font-size: 12px; }
+    .ai-review-process__content { flex: 1; }
+    .ai-review-process__title { color: var(--fontTitle); font-size: 13px; font-weight: 600; }
+    .ai-review-process__desc { margin-top: 2px; color: var(--fontNormal); font-size: 12px; }
+    .ai-review-process__text { color: var(--fontDefault); font-size: 14px; line-height: 1.8; }
+    .ai-review-result__simple { display: flex; flex-direction: column; gap: 10px; color: var(--fontDefault); font-size: 14px; }
+    .ai-review-result__simple strong { color: var(--fontTitle); font-weight: 600; }
+    .ai-review-result__params { padding: 10px 12px; background: #fffaf0; border: 1px solid #f7dca0; border-radius: var(--radiusSm); color: #8a5b00; }
+    .ai-review-chat__expected-content { width: fit-content; max-width: 78%; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+    .ai-review-expected__label { align-self: flex-start; color: #ff7a00; font-size: 10px; line-height: 1.2; font-weight: 600; }
+    .ai-review-chat__row.expected { margin-top: 12px; }
+    .ai-review-chat__row.expected .ai-review-chat__avatar { background: #ff7a00; }
+    .ai-review-chat__row.expected .ai-review-chat__bubble { width: auto; max-width: 100%; margin-top: 0; background: #fffaf0; border-color: #ffb566; color: #8a5b00; }
+    .ai-review-help-icon { position: relative; top: 8px; margin-left: 4px; color: var(--fontNormal); cursor: help; vertical-align: middle; }
+    .ai-review-footer { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 14px; background: var(--bgCard); border: 1px solid var(--borderBase); border-radius: var(--radiusMd); box-shadow: var(--shadowSm); }
+    .ai-review-collapse { border-top: 0; border-bottom: 0; }
+    .ai-review-collapse .el-collapse-item { margin-bottom: 14px; background: var(--bgCard); border: 1px solid var(--borderBase); border-radius: var(--radiusMd); box-shadow: var(--shadowSm); overflow: hidden; }
+    .ai-review-collapse .el-collapse-item__header { position: relative; height: 46px; padding: 0 18px 0 30px; background: var(--bgHover); border-bottom: 1px solid var(--borderBase); color: var(--fontTitle); font-size: 14px; font-weight: 600; }
+    .ai-review-collapse .el-collapse-item__header::before { content: ''; position: absolute; left: 16px; top: 50%; width: 3px; height: 14px; transform: translateY(-50%); border-radius: 2px; background: var(--defaultColor); }
+    .ai-review-collapse .el-collapse-item__wrap { background: var(--bgCard); border-bottom: 0; }
+    .ai-review-collapse .el-collapse-item__content { padding: 16px 18px 18px; color: var(--fontDefault); }
+    .ai-review-collapse .el-collapse-item__arrow { color: var(--fontNormal); }
+    .ai-review-collapse .el-descriptions { margin: 0; }
+    @media (max-width: 800px) { .ai-review-result { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 560px) { .ai-review-result { grid-template-columns: 1fr; } }
+
     /* ===== 客诉工单创建页（还原 CreateComplains/index.vue 结构）===== */
     .create-complains-form {
       width: 100%;
@@ -421,6 +499,14 @@
         <div class="p-menu-item" :class="{ active: currentPage === 'diagnose' }" @click="currentPage = 'diagnose'">
           <span class="p-menu-icon">🔍</span>
           智能诊断
+        </div>
+        <div class="p-menu-item" :class="{ active: currentPage === 'aiReview' }" @click="currentPage = 'aiReview'">
+          <span class="p-menu-icon">✅</span>
+          AI意图审核
+        </div>
+        <div class="p-menu-item" :class="{ active: currentPage === 'aiResultReview' }" @click="currentPage = 'aiResultReview'">
+          <span class="p-menu-icon">📋</span>
+          AI办理结果复核
         </div>
         <div class="p-menu-item" :class="{ active: currentPage === 'complain' }" @click="currentPage = 'complain'">
           <span class="p-menu-icon">🧾</span>
@@ -1069,7 +1155,227 @@
       </el-dialog>
         </template>
         <!-- ======================================================= -->
-        <!-- 页面2：客诉工单创建（新增"开票"业务类型） -->
+        <!-- 页面2：AI意图审核钉钉待办原型 -->
+        <!-- ======================================================= -->
+        <template v-if="currentPage === 'aiReview'">
+        <div class="content-container ai-review-page">
+          <div class="ai-review-detail-header">
+            <div class="ai-review-topbar">
+              <span class="ai-review-back" @click="currentPage = 'diagnose'">← 返回列表</span>
+              <el-tag type="warning" effect="plain">待意图审核</el-tag>
+            </div>
+            <div class="ai-review-order-title">
+              <div>
+                <h1>工单 {{ aiIntentReview.workOrderId }}</h1>
+                <div class="ai-review-order-title__meta">{{ aiIntentReview.customerName }}　·　发起人：{{ aiIntentReview.creatorName }}</div>
+              </div>
+            </div>
+          </div>
+
+          <el-collapse v-model="aiReviewExpanded" class="ai-review-collapse">
+          <el-collapse-item title="基础信息" name="basic">
+            <el-descriptions :column="2" border size="small">
+              <el-descriptions-item label="创建时间">{{ aiIntentReview.createdAt }}</el-descriptions-item>
+              <el-descriptions-item label="业务类型">{{ aiIntentReview.businessType }}</el-descriptions-item>
+              <el-descriptions-item label="咨询渠道">{{ aiIntentReview.channel }}</el-descriptions-item>
+              <el-descriptions-item label="报障工单号">{{ aiIntentReview.faultOrderId }}</el-descriptions-item>
+              <el-descriptions-item label="是否需要跟进">{{ aiIntentReview.follow ? '是' : '否' }}</el-descriptions-item>
+              <el-descriptions-item label="跟进人">{{ aiIntentReview.followName }}</el-descriptions-item>
+              <el-descriptions-item label="是否需要二次确认">{{ aiIntentReview.doubleCheck ? '是' : '否' }}</el-descriptions-item>
+              <el-descriptions-item label="处理详情">{{ aiIntentReview.handleDetail }}</el-descriptions-item>
+              <el-descriptions-item label="是否退费">{{ aiIntentReview.refund ? '是' : '否' }}</el-descriptions-item>
+              <el-descriptions-item label="是否违规">{{ aiIntentReview.violation ? '是' : '否' }}</el-descriptions-item>
+              <el-descriptions-item label="客户行业类别">{{ aiIntentReview.customerIndustry }}</el-descriptions-item>
+              <el-descriptions-item label="卡片类型">{{ aiIntentReview.cardType }}，{{ aiIntentReview.cardNo }}</el-descriptions-item>
+              <el-descriptions-item label="区域">{{ aiIntentReview.area }}</el-descriptions-item>
+              <el-descriptions-item label="关联销售">{{ aiIntentReview.sale }}</el-descriptions-item>
+              <el-descriptions-item label="卡归属">{{ aiIntentReview.cardOwner }}</el-descriptions-item>
+              <el-descriptions-item label="供应商账号">{{ aiIntentReview.supplierAccount }}</el-descriptions-item>
+              <el-descriptions-item label="客户名称" :span="2">{{ aiIntentReview.customerName }}</el-descriptions-item>
+              <el-descriptions-item label="备注" :span="2">{{ aiIntentReview.baseRemark }}</el-descriptions-item>
+              <el-descriptions-item label="微信群">{{ aiIntentReview.roomName }}</el-descriptions-item>
+              <el-descriptions-item label="附件">{{ aiIntentReview.attachment }}</el-descriptions-item>
+              <el-descriptions-item label="图片凭证" :span="2">
+                <div class="ai-review-proof">
+                  <div class="ai-review-proof__thumb">凭证</div>
+                  <el-button link type="primary" size="small">下载全部图片</el-button>
+                </div>
+              </el-descriptions-item>
+            </el-descriptions>
+          </el-collapse-item>
+
+          <el-collapse-item title="聊天记录" name="chat">
+            <div class="ai-review-chat-room">群名称：{{ aiIntentReview.roomName }}</div>
+            <div class="ai-review-chat">
+              <div v-for="(message, index) in aiIntentReview.chatRecords" :key="index" class="ai-review-chat__row" :class="{ ai: message.role === 'AI' }">
+                <div class="ai-review-chat__identity">
+                  <div class="ai-review-chat__name">{{ message.role === 'AI' ? '智能体' : message.name }}</div>
+                  <div class="ai-review-chat__avatar">{{ message.role === 'AI' ? 'AI' : '客' }}</div>
+                </div>
+                <div class="ai-review-chat__bubble">{{ message.content }}</div>
+              </div>
+            </div>
+          </el-collapse-item>
+
+          <el-collapse-item title="意图识别过程" name="process">
+            <div class="ai-review-process__text">{{ aiIntentReview.processDescription }}</div>
+          </el-collapse-item>
+
+          <el-collapse-item title="意图识别结果" name="result">
+            <div class="ai-review-result__simple">
+              <div>办理操作：<strong>{{ aiIntentReview.operationName }}</strong></div>
+              <div>识别置信度：{{ aiIntentReview.confidence }}</div>
+              <div>办理参数：</div>
+              <div class="ai-review-result__params">{{ aiIntentReview.operationParams }}</div>
+            </div>
+          </el-collapse-item>
+
+          <el-collapse-item title="人工审核" name="review">
+            <el-form label-width="110px" label-position="right">
+              <el-form-item label="审核结论：" required>
+                <el-radio-group v-model="aiIntentReview.decision" :disabled="aiIntentReview.submitted">
+                  <el-radio value="APPROVED">意图正确，允许办理</el-radio>
+                  <el-radio value="REJECTED">意图错误，工单失败</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item label="审核备注：">
+                <el-input v-model="aiIntentReview.remark" type="textarea" :rows="3" maxlength="500" show-word-limit :disabled="aiIntentReview.submitted" placeholder="请输入审核意见"></el-input>
+              </el-form-item>
+            </el-form>
+          </el-collapse-item>
+          </el-collapse>
+
+          <div class="ai-review-footer">
+            <el-button type="primary" :disabled="aiIntentReview.submitted" @click="submitAiIntentReview">提交审核</el-button>
+          </div>
+        </div>
+        </template>
+        <!-- ======================================================= -->
+        <!-- 页面3：AI办理结果复核钉钉待办原型 -->
+        <!-- ======================================================= -->
+        <template v-if="currentPage === 'aiResultReview'">
+        <div class="content-container ai-review-page">
+          <div class="ai-review-detail-header">
+            <div class="ai-review-topbar">
+              <span class="ai-review-back" @click="currentPage = 'diagnose'">← 返回列表</span>
+              <el-tag type="warning" effect="plain">待办理结果复核</el-tag>
+            </div>
+            <div class="ai-review-order-title">
+              <div>
+                <h1>工单 {{ aiResultReview.workOrderId }}</h1>
+                <div class="ai-review-order-title__meta">{{ aiResultReview.customerName }}　·　发起人：{{ aiResultReview.creatorName }}</div>
+              </div>
+            </div>
+          </div>
+
+          <el-collapse v-model="aiResultReviewExpanded" class="ai-review-collapse">
+          <el-collapse-item title="基础信息" name="basic">
+            <el-descriptions :column="2" border size="small">
+              <el-descriptions-item label="创建时间">{{ aiResultReview.createdAt }}</el-descriptions-item>
+              <el-descriptions-item label="业务类型">{{ aiResultReview.businessType }}</el-descriptions-item>
+              <el-descriptions-item label="咨询渠道">{{ aiResultReview.channel }}</el-descriptions-item>
+              <el-descriptions-item label="报障工单号">{{ aiResultReview.faultOrderId }}</el-descriptions-item>
+              <el-descriptions-item label="是否需要跟进">{{ aiResultReview.follow ? '是' : '否' }}</el-descriptions-item>
+              <el-descriptions-item label="跟进人">{{ aiResultReview.followName }}</el-descriptions-item>
+              <el-descriptions-item label="是否需要二次确认">{{ aiResultReview.doubleCheck ? '是' : '否' }}</el-descriptions-item>
+              <el-descriptions-item label="处理详情">{{ aiResultReview.handleDetail }}</el-descriptions-item>
+              <el-descriptions-item label="是否退费">{{ aiResultReview.refund ? '是' : '否' }}</el-descriptions-item>
+              <el-descriptions-item label="是否违规">{{ aiResultReview.violation ? '是' : '否' }}</el-descriptions-item>
+              <el-descriptions-item label="客户行业类别">{{ aiResultReview.customerIndustry }}</el-descriptions-item>
+              <el-descriptions-item label="卡片类型">{{ aiResultReview.cardType }}，{{ aiResultReview.cardNo }}</el-descriptions-item>
+              <el-descriptions-item label="区域">{{ aiResultReview.area }}</el-descriptions-item>
+              <el-descriptions-item label="关联销售">{{ aiResultReview.sale }}</el-descriptions-item>
+              <el-descriptions-item label="卡归属">{{ aiResultReview.cardOwner }}</el-descriptions-item>
+              <el-descriptions-item label="供应商账号">{{ aiResultReview.supplierAccount }}</el-descriptions-item>
+              <el-descriptions-item label="客户名称" :span="2">{{ aiResultReview.customerName }}</el-descriptions-item>
+              <el-descriptions-item label="备注" :span="2">{{ aiResultReview.baseRemark }}</el-descriptions-item>
+              <el-descriptions-item label="微信群">{{ aiResultReview.roomName }}</el-descriptions-item>
+              <el-descriptions-item label="附件">{{ aiResultReview.attachment }}</el-descriptions-item>
+              <el-descriptions-item label="图片凭证" :span="2">
+                <div class="ai-review-proof"><div class="ai-review-proof__thumb">凭证</div><el-button link type="primary" size="small">下载全部图片</el-button></div>
+              </el-descriptions-item>
+            </el-descriptions>
+          </el-collapse-item>
+
+          <el-collapse-item title="聊天记录" name="chat">
+            <div class="ai-review-chat-room">群名称：{{ aiResultReview.roomName }}</div>
+            <div class="ai-review-chat">
+              <div v-for="(message, index) in aiResultReview.chatRecords" :key="index" class="ai-review-chat__row" :class="{ ai: message.role === 'AI' }">
+                <div class="ai-review-chat__identity">
+                  <div class="ai-review-chat__name">{{ message.role === 'AI' ? '智能体' : message.name }}</div>
+                  <div class="ai-review-chat__avatar">{{ message.role === 'AI' ? 'AI' : '客' }}</div>
+                </div>
+                <div class="ai-review-chat__bubble">{{ message.content }}</div>
+              </div>
+              <div class="ai-review-chat__row ai expected">
+                <div class="ai-review-chat__identity">
+                  <div class="ai-review-chat__name">智能体</div>
+                  <div class="ai-review-chat__avatar">AI</div>
+                </div>
+                <div class="ai-review-chat__expected-content">
+                  <div class="ai-review-expected__label">预计回复</div>
+                  <div class="ai-review-chat__bubble">{{ aiResultReview.expectedReply }}</div>
+                </div>
+              </div>
+            </div>
+          </el-collapse-item>
+
+          <el-collapse-item title="原始意图识别结果" name="intent">
+            <div class="ai-review-result__simple">
+              <div>办理操作：<strong>{{ aiResultReview.operationName }}</strong></div>
+              <div>识别置信度：{{ aiResultReview.confidence }}</div>
+              <div>办理参数：</div>
+              <div class="ai-review-result__params">{{ aiResultReview.operationParams }}</div>
+              <div>意图审核人：{{ aiResultReview.intentReviewer }}</div>
+            </div>
+          </el-collapse-item>
+
+          <el-collapse-item title="办理结果" name="execution">
+            <div class="ai-review-result__simple">
+              <div>办理状态：<el-tag type="success" size="small">{{ aiResultReview.executionStatus }}</el-tag></div>
+              <div>办理操作：{{ aiResultReview.operationName }}</div>
+              <div>外部请求号：{{ aiResultReview.externalRequestId }}</div>
+              <div>结果码：{{ aiResultReview.resultCode }}</div>
+              <div>结果说明：{{ aiResultReview.resultMessage }}</div>
+              <div>办理时间：{{ aiResultReview.executionTime }}</div>
+            </div>
+          </el-collapse-item>
+
+          <el-collapse-item title="办理结果人工复核" name="review">
+            <el-form label-width="120px" label-position="right">
+              <el-form-item label="办理结果与实际结果是否一致：" required label-width="220px">
+                <el-radio-group v-model="aiResultReview.resultConsistent" :disabled="aiResultReview.submitted">
+                  <el-radio value="CONSISTENT">一致</el-radio>
+                  <el-radio value="INCONSISTENT">不一致</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item required>
+                <template #label>
+                  复核结论
+                  <el-tooltip content="办理失败或复核失败，需要人工跟进处理" placement="top">
+                    <el-icon class="ai-review-help-icon"><question-filled /></el-icon>
+                  </el-tooltip>
+                  ：
+                </template>
+                <el-radio-group v-model="aiResultReview.decision" :disabled="aiResultReview.submitted">
+                  <el-radio value="APPROVED">办理成功，复核成功，确认完结</el-radio>
+                  <el-radio value="REJECTED">办理失败或复核失败，工单失败</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item label="复核备注：">
+                <el-input v-model="aiResultReview.remark" type="textarea" :rows="3" maxlength="500" show-word-limit :disabled="aiResultReview.submitted" placeholder="请输入复核意见"></el-input>
+              </el-form-item>
+            </el-form>
+          </el-collapse-item>
+          </el-collapse>
+
+          <div class="ai-review-footer">
+            <el-button type="primary" :disabled="aiResultReview.submitted" @click="submitAiResultReview">提交复核</el-button>
+          </div>
+        </div>
+        </template>
+        <!-- ======================================================= -->
+        <!-- 页面4：客诉工单创建（新增"开票"业务类型） -->
         <!-- ======================================================= -->
         <template v-if="currentPage === 'complain'">
         <el-breadcrumb separator="/">
@@ -1437,8 +1743,93 @@ const app = createApp({
     };
     const dialogs = reactive({ channel:false, deviceDetail:false, cardLog:false, mealMore:false, complainLog:false, cPreview:false });
 
-    // ============ 页面切换（智能诊断 / 客诉工单创建 / 面包退款） ============
+    // ============ 页面切换（智能诊断 / AI意图审核 / 客诉工单创建 / 面包退款） ============
     const currentPage = ref('diagnose');
+    const aiReviewExpanded = ref(['basic', 'chat', 'process', 'result', 'review']);
+
+    const aiIntentReview = reactive({
+      workOrderId: '719866330891440128',
+      createdAt: '2026-10-15 11:15:31',
+      creatorName: '刘雅欣',
+      customerName: '耀晋测试',
+      roomName: '测试群',
+      senderName: '客服',
+      cardNo: '8986321654987023664',
+      channel: '微信',
+      faultOrderId: '-',
+      follow: true,
+      followName: '刘雅欣',
+      doubleCheck: false,
+      handleDetail: '-',
+      refund: false,
+      violation: false,
+      customerIndustry: 'C端用户',
+      cardType: 'ICCID',
+      area: '-',
+      sale: '-',
+      cardOwner: '北纬自有',
+      supplierAccount: '青岛电信CMP@赛贝尔',
+      attachment: '-',
+      baseRemark: '-',
+      messageId: '2568386',
+      sessionId: 'ai-session-20261015-001',
+      processDescription: '智能体接收用户问题后，结合聊天记录、卡片查询结果和诊断信息进行分析，识别用户意图并生成对应的业务办理建议和参数。',
+      intentName: '卡机重绑',
+      businessType: '机卡重绑',
+      confidence: '98%',
+      operationName: '调用机卡重绑业务接口',
+      operationParams: '目标卡：8986321654987023664；设备号：DV250703001',
+      decision: '',
+      remark: '',
+      submitted: false,
+      chatRecords: [
+        { role: 'USER', name: '客服', content: '这张卡需要重新绑定设备，麻烦帮忙处理一下。' },
+        { role: 'AI', name: '智能体', content: '已识别为机卡重绑，正在整理办理参数，等待人工审核。' },
+      ],
+    });
+    const aiResultReviewExpanded = ref(['basic', 'chat', 'intent', 'execution', 'review']);
+    const aiResultReview = reactive({
+      workOrderId: '719866330891440128',
+      createdAt: '2026-10-15 11:15:31',
+      creatorName: '刘雅欣',
+      customerName: '耀晋测试',
+      roomName: '测试群',
+      cardNo: '8986321654987023664',
+      channel: '微信',
+      faultOrderId: '-',
+      follow: true,
+      followName: '刘雅欣',
+      doubleCheck: false,
+      handleDetail: '-',
+      refund: false,
+      violation: false,
+      customerIndustry: 'C端用户',
+      cardType: 'ICCID',
+      area: '-',
+      sale: '-',
+      cardOwner: '北纬自有',
+      supplierAccount: '青岛电信CMP@赛贝尔',
+      attachment: '-',
+      baseRemark: '-',
+      sessionId: 'ai-session-20261015-001',
+      operationName: '调用机卡重绑业务接口',
+      confidence: '98%',
+      operationParams: '目标卡：8986321654987023664；设备号：DV250703001',
+      intentReviewer: '刘雅欣',
+      executionStatus: '办理成功',
+      externalRequestId: 'AI-EXEC-20261015-001',
+      resultCode: '0',
+      resultMessage: '外部业务系统办理成功',
+      executionTime: '2026-10-15 11:20:46',
+      expectedReply: '您的机卡重绑业务已办理成功，请重新尝试使用。',
+      resultConsistent: '',
+      decision: '',
+      remark: '',
+      submitted: false,
+      chatRecords: [
+        { role: 'USER', name: '客服', content: '这张卡需要重新绑定设备，麻烦帮忙处理一下。' },
+      ],
+    });
 
     // 通用：是否超过一年（与 CreatePine 现有 isYearPassed 逻辑保持一致）
     const isYearPassed = date => {
@@ -1568,6 +1959,31 @@ const app = createApp({
         return;
       }
       ElementPlus.ElMessage.success('工单创建成功（原型模拟）');
+    };
+
+    const submitAiIntentReview = () => {
+      if (!aiIntentReview.decision) {
+        ElementPlus.ElMessage.warning('请选择审核结论');
+        return;
+      }
+      aiIntentReview.submitted = true;
+      ElementPlus.ElMessage.success(aiIntentReview.decision === 'APPROVED' ? '审核通过，已通知智能体继续办理（原型模拟）' : '审核已驳回，工单标记为失败（原型模拟）');
+    };
+
+    const submitAiResultReview = () => {
+      if (!aiResultReview.resultConsistent) {
+        ElementPlus.ElMessage.warning('请选择办理结果是否与实际结果一致');
+        return;
+      }
+      if (!aiResultReview.decision) {
+        ElementPlus.ElMessage.warning('请选择复核结论');
+        return;
+      }
+      aiResultReview.submitted = true;
+      const message = aiResultReview.decision === 'APPROVED'
+        ? '办理成功且复核通过，工单确认完结（原型模拟）'
+        : '办理失败或复核失败，工单标记为失败并需要人工跟进处理（原型模拟）';
+      ElementPlus.ElMessage.success(message);
     };
 
     // ============ 页面3：面包退款（线下退款新增"收款账号"必填项） ============
@@ -1804,7 +2220,9 @@ const app = createApp({
       mealInfoRows, equityCardRows, userInfoRows, depositRows,
       complainRows, complainPage,
       onMainTabChange, onChannelConfirm, initNetworkChart,
-      currentPage, isYearPassed, followerOpts,
+      currentPage, aiReviewExpanded, aiResultReviewExpanded, isYearPassed, followerOpts,
+      aiIntentReview, submitAiIntentReview,
+      aiResultReview, submitAiResultReview,
       complainBusinessOpts, complainForm, onCheckCard,
       invoiceForm, invoiceDialog, invoiceAddedOrderIds, onQueryInvoiceOrders, onInvoiceSelectionChange,
       onChooseInvoiceOrder, onConfirmInvoiceOrders, onRemoveInvoiceOrder, onComplainSubmit, onMergeInvoiceChange,
